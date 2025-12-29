@@ -21,6 +21,9 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role',
+        'status',
+
     ];
 
     /**
@@ -33,6 +36,58 @@ class User extends Authenticatable
         'remember_token',
     ];
 
+    public function profile()
+    {
+        return $this->hasOne(Profile::class);
+    }
+
+    public function companies()
+    {
+        return $this->belongsToMany(Company::class, 'company_users')
+            ->withPivot('role_in_company', 'status', 'joined_at')
+            ->withTimestamps();
+    }
+    public function companyUsers()
+    {
+        return $this->hasMany(CompanyUser::class);
+    }
+
+
+    public function resumes()
+    {
+        return $this->hasMany(Resume::class);
+    }
+
+    public function applications()
+    {
+        return $this->hasMany(Application::class);
+    }
+
+    public function savedJobs()
+    {
+        return $this->hasMany(SavedJob::class);
+    }
+
+    // public function conversationAsUser1()
+    // {
+    //     return $this->hasMany(Conversation::class,'user1_id');
+    // }
+
+    // public function conversationAsUser2()
+    // {
+    //     return $this->hasMany(Conversation::class,'user2_id');
+    // }
+
+    // public function messages()
+    // {
+    //     return $this->hasMany(Message::class);
+    // }
+
+    // public function notifications()
+    // {
+    //     return $this->hasMany(Notification::class);
+    // }
+
     /**
      * The attributes that should be cast.
      *
@@ -42,4 +97,20 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    protected static function booted()
+    {
+        static::created(function ($user) {
+            $pendingInvites = \App\Models\CompanyUser::whereNull('user_id')
+                ->where('email', $user->email)
+                ->where('status', 'pending')
+                ->get();
+
+            foreach ($pendingInvites as $invite) {
+                $invite->update([
+                    'user_id' => $user->id,
+                ]);
+            }
+        });
+    }
 }
