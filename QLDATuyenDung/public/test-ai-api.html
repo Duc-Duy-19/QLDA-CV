@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test AI Chat API</title>
+    <style>
+        body { font-family: Arial; padding: 20px; max-width: 800px; margin: 0 auto; }
+        .log { background: #f5f5f5; padding: 15px; margin: 10px 0; border-radius: 5px; white-space: pre-wrap; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        input { padding: 8px; width: 300px; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test AI Chat API</h1>
+    
+    <div>
+        <h3>1. Test Start AI Chat</h3>
+        <button onclick="testStart()">Test /api/chat/ai/start</button>
+        <div id="start-result" class="log"></div>
+    </div>
+
+    <div>
+        <h3>2. Test Send Message</h3>
+        <input type="text" id="conv-id" placeholder="Conversation ID" />
+        <input type="text" id="message" placeholder="Message" value="Xin chào" />
+        <button onclick="testMessage()">Test /api/chat/ai/message</button>
+        <div id="message-result" class="log"></div>
+    </div>
+
+    <div>
+        <h3>Auth Token</h3>
+        <small>Từ localStorage.getItem('authToken')</small>
+        <div id="token-display" class="log"></div>
+    </div>
+
+    <script>
+        // Display token
+        const token = localStorage.getItem('authToken');
+        document.getElementById('token-display').textContent = token ? 
+            'Token: ' + token.substring(0, 20) + '...' : 
+            '❌ NO TOKEN - Please login first!';
+
+        async function testStart() {
+            const resultDiv = document.getElementById('start-result');
+            resultDiv.textContent = '⏳ Testing...';
+            
+            try {
+                console.log('Calling /api/chat/ai/start...');
+                const response = await fetch('/api/chat/ai/start', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                console.log('Response status:', response.status);
+                const data = await response.json();
+                console.log('Response data:', data);
+                
+                if (response.ok) {
+                    resultDiv.textContent = '✅ SUCCESS!\n' + JSON.stringify(data, null, 2);
+                    document.getElementById('conv-id').value = data.conversation_id;
+                } else {
+                    resultDiv.textContent = '❌ ERROR!\nStatus: ' + response.status + '\n' + JSON.stringify(data, null, 2);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.textContent = '❌ EXCEPTION!\n' + error.message + '\n' + error.stack;
+            }
+        }
+
+        async function testMessage() {
+            const resultDiv = document.getElementById('message-result');
+            const convId = document.getElementById('conv-id').value;
+            const message = document.getElementById('message').value;
+            
+            if (!convId) {
+                alert('Please run "Test Start" first to get conversation ID');
+                return;
+            }
+            
+            resultDiv.textContent = '⏳ Sending...';
+            
+            try {
+                console.log('Calling /api/chat/ai/message...');
+                const response = await fetch('/api/chat/ai/message', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        conversation_id: convId,
+                        message: message
+                    })
+                });
+
+                console.log('Response status:', response.status);
+                const data = await response.json();
+                console.log('Response data:', data);
+                
+                if (response.ok) {
+                    resultDiv.textContent = '✅ SUCCESS!\n' + JSON.stringify(data, null, 2);
+                } else {
+                    resultDiv.textContent = '❌ ERROR!\nStatus: ' + response.status + '\n' + JSON.stringify(data, null, 2);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.textContent = '❌ EXCEPTION!\n' + error.message + '\n' + error.stack;
+            }
+        }
+    </script>
+</body>
+</html>

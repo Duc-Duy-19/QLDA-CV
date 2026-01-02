@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="vi">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Test Jobs API</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                max-width: 800px;
+                margin: 50px auto;
+                padding: 20px;
+            }
+            button {
+                padding: 10px 20px;
+                font-size: 16px;
+                cursor: pointer;
+                background: #007bff;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                margin: 5px;
+            }
+            button:hover {
+                background: #0056b3;
+            }
+            pre {
+                background: #f4f4f4;
+                padding: 15px;
+                border-radius: 4px;
+                overflow-x: auto;
+                max-height: 500px;
+            }
+            .error {
+                color: red;
+            }
+            .success {
+                color: green;
+            }
+            .info {
+                color: #666;
+                margin: 10px 0;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>🧪 Test Jobs API</h1>
+
+        <div class="info">
+            <strong>Token hiện tại:</strong>
+            <span id="token-status">Checking...</span>
+        </div>
+
+        <div>
+            <button onclick="testMyCompany()">1. Test /api/my-company</button>
+            <button onclick="testJobs()">2. Test /api/jobs</button>
+            <button onclick="testCategories()">
+                3. Test /api/public/categories
+            </button>
+            <button onclick="clearToken()">❌ Clear Token</button>
+        </div>
+
+        <div id="result" style="margin-top: 20px"></div>
+
+        <script>
+            // Check token on load
+            window.addEventListener("DOMContentLoaded", () => {
+                const token =
+                    localStorage.getItem("authToken") ||
+                    localStorage.getItem("token");
+                const status = document.getElementById("token-status");
+
+                if (token) {
+                    status.innerHTML = `<span class="success">✅ Có token (${token.substring(
+                        0,
+                        20
+                    )}...)</span>`;
+                } else {
+                    status.innerHTML = `<span class="error">❌ Không có token. Vui lòng đăng nhập!</span>`;
+                }
+            });
+
+            function clearToken() {
+                localStorage.removeItem("authToken");
+                localStorage.removeItem("token");
+                alert("Đã xóa token. Vui lòng đăng nhập lại!");
+                location.reload();
+            }
+
+            async function testMyCompany() {
+                const resultDiv = document.getElementById("result");
+                resultDiv.innerHTML = "<p>Loading...</p>";
+
+                try {
+                    const token =
+                        localStorage.getItem("authToken") ||
+                        localStorage.getItem("token");
+                    const headers = {
+                        Accept: "application/json",
+                    };
+
+                    if (token) {
+                        headers["Authorization"] = `Bearer ${token}`;
+                    }
+
+                    const response = await fetch("/api/my-company", {
+                        method: "GET",
+                        headers: headers,
+                        credentials: "include",
+                    });
+
+                    const data = await response.json();
+
+                    resultDiv.innerHTML = `
+                    <h3>Test /api/my-company</h3>
+                    <p><strong>Status:</strong> <span class="${
+                        response.ok ? "success" : "error"
+                    }">${response.status} ${response.statusText}</span></p>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+                } catch (error) {
+                    resultDiv.innerHTML = `
+                    <h3 class="error">Error!</h3>
+                    <pre class="error">${error.message}</pre>
+                `;
+                }
+            }
+
+            async function testJobs() {
+                const resultDiv = document.getElementById("result");
+                resultDiv.innerHTML = "<p>Loading...</p>";
+
+                try {
+                    const token =
+                        localStorage.getItem("authToken") ||
+                        localStorage.getItem("token");
+                    const headers = {
+                        Accept: "application/json",
+                    };
+
+                    if (token) {
+                        headers["Authorization"] = `Bearer ${token}`;
+                    }
+
+                    const response = await fetch("/api/jobs", {
+                        method: "GET",
+                        headers: headers,
+                        credentials: "include",
+                    });
+
+                    const text = await response.text();
+                    let data;
+                    try {
+                        data = JSON.parse(text);
+                    } catch (e) {
+                        data = text;
+                    }
+
+                    resultDiv.innerHTML = `
+                    <h3>Test /api/jobs</h3>
+                    <p><strong>Status:</strong> <span class="${
+                        response.ok ? "success" : "error"
+                    }">${response.status} ${response.statusText}</span></p>
+                    <p><strong>Type:</strong> ${typeof data}</p>
+                    <p><strong>Is Array:</strong> ${Array.isArray(data)}</p>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+                } catch (error) {
+                    resultDiv.innerHTML = `
+                    <h3 class="error">Error!</h3>
+                    <pre class="error">${error.message}</pre>
+                `;
+                }
+            }
+
+            async function testCategories() {
+                const resultDiv = document.getElementById("result");
+                resultDiv.innerHTML = "<p>Loading...</p>";
+
+                try {
+                    const response = await fetch("/api/public/categories", {
+                        method: "GET",
+                        headers: {
+                            Accept: "application/json",
+                        },
+                        credentials: "include",
+                    });
+
+                    const data = await response.json();
+
+                    resultDiv.innerHTML = `
+                    <h3>Test /api/public/categories</h3>
+                    <p><strong>Status:</strong> <span class="${
+                        response.ok ? "success" : "error"
+                    }">${response.status} ${response.statusText}</span></p>
+                    <p><strong>Count:</strong> ${
+                        Array.isArray(data) ? data.length : "N/A"
+                    }</p>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+                } catch (error) {
+                    resultDiv.innerHTML = `
+                    <h3 class="error">Error!</h3>
+                    <pre class="error">${error.message}</pre>
+                `;
+                }
+            }
+        </script>
+    </body>
+</html>

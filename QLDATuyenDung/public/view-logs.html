@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Laravel Logs Viewer</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1e1e1e; color: #d4d4d4; }
+        button { padding: 10px 20px; cursor: pointer; background: #0e639c; color: white; border: none; border-radius: 5px; }
+        pre { background: #252526; padding: 15px; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word; }
+        .error { color: #f48771; }
+        .info { color: #4ec9b0; }
+    </style>
+</head>
+<body>
+    <h1>📋 Laravel Logs</h1>
+    <button onclick="loadLogs()">Refresh Logs</button>
+    <button onclick="testGeminiDirect()">Test Gemini Direct</button>
+    <pre id="logs">Click "Refresh Logs" to load...</pre>
+
+    <script>
+        async function loadLogs() {
+            document.getElementById('logs').textContent = 'Loading...';
+            try {
+                const response = await fetch('/api/debug/logs');
+                const text = await response.text();
+                document.getElementById('logs').innerHTML = text;
+            } catch (error) {
+                document.getElementById('logs').textContent = 'Error: ' + error.message;
+            }
+        }
+
+        async function testGeminiDirect() {
+            document.getElementById('logs').textContent = 'Testing Gemini API directly...';
+            try {
+                const response = await fetch('/api/debug/test-gemini');
+                const data = await response.json();
+                document.getElementById('logs').textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                document.getElementById('logs').textContent = 'Error: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>
