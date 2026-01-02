@@ -1,0 +1,270 @@
+/* Modernized Job detail styles */
+:root {
+    --accent: #16a34a;
+    --accent-dark: #0f6b36;
+    --muted: #6b6b6b;
+    --card-bg: #ffffff;
+    --page-bg: #f7fbf7;
+}
+
+body {
+    background: var(--page-bg);
+}
+.job-page {
+    padding: 36px 0 64px;
+}
+.job-page > .container-inner {
+    padding-left: 20px;
+    padding-right: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.job-card {
+    background: var(--card-bg);
+    border-radius: 14px;
+    box-shadow: 0 12px 40px rgba(15, 30, 20, 0.06);
+    padding: 36px;
+    position: relative;
+    overflow: visible;
+}
+.job-grid {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 28px;
+    align-items: start;
+}
+
+.job-title {
+    font-size: 36px;
+    margin: 0 0 6px;
+    font-weight: 800;
+    color: var(--accent-dark);
+    line-height: 1.05;
+}
+.job-sub {
+    color: var(--muted);
+    font-size: 15px;
+    margin-bottom: 8px;
+}
+
+/* header row containing title and right action */
+.job-card .header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.job-meta {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+}
+.meta-item {
+    background: linear-gradient(180deg, #f3fff6, #ebfff0);
+    color: var(--accent-dark);
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 13px;
+    border: 1px solid #def6e4;
+}
+
+.action-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+.btn-apply {
+    background: var(--accent);
+    color: #fff;
+    padding: 12px 18px;
+    border-radius: 999px;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 8px 28px rgba(22, 163, 74, 0.18);
+    font-weight: 700;
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+.btn-apply:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 14px 40px rgba(22, 163, 74, 0.22);
+}
+.btn-apply:focus {
+    outline: none;
+    box-shadow: 0 0 0 6px rgba(22, 163, 74, 0.08);
+}
+
+/* Hide the top apply button, only show the one in sidebar */
+#apply-btn {
+    display: none;
+}
+
+/* Save button removed from UI, keep class in CSS in case reused */
+.btn-save {
+    display: none;
+}
+
+.company-card {
+    padding: 18px;
+    border-radius: 12px;
+    background: var(--card-bg);
+    text-align: center;
+    box-shadow: 0 8px 26px rgba(16, 30, 20, 0.04);
+    border: 1px solid #eef7ef;
+}
+.company-logo {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 8px;
+    background: #fff;
+    display: inline-block;
+}
+.company-name {
+    font-weight: 700;
+    margin-top: 10px;
+    color: var(--accent-dark);
+}
+.company-meta {
+    color: var(--muted);
+    font-size: 13px;
+    margin-top: 6px;
+}
+
+/* Application form card in sidebar */
+.application-form-card {
+    margin-top: 14px;
+    padding: 18px;
+    border-radius: 12px;
+    background: var(--card-bg);
+    box-shadow: 0 8px 26px rgba(16, 30, 20, 0.04);
+    border: 1px solid #eef7ef;
+}
+.application-form-card h4 {
+    margin: 0 0 16px;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--accent-dark);
+}
+.application-form-card label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+    font-size: 13px;
+}
+.application-form-card select,
+.application-form-card input[type="file"],
+.application-form-card textarea {
+    width: 100%;
+    margin-bottom: 12px;
+}
+.application-form-card .btn-apply {
+    width: 100%;
+    position: static;
+}
+
+.section-title {
+    font-weight: 700;
+    margin-top: 6px;
+    margin-bottom: 8px;
+    color: var(--accent-dark);
+}
+.job-description {
+    line-height: 1.9;
+    color: #333;
+    margin-top: 6px;
+    background: transparent;
+}
+
+/* Inputs and textarea styling */
+select,
+input[type="file"],
+textarea {
+    border: 1px solid #e6ece8;
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 14px;
+}
+textarea {
+    min-height: 140px;
+    resize: vertical;
+    box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.02);
+}
+select:focus,
+textarea:focus,
+input[type="file"]:focus {
+    outline: none;
+    box-shadow: 0 0 0 6px rgba(22, 163, 74, 0.06);
+}
+
+#resume-note {
+    font-size: 13px;
+    color: #b33;
+    margin-top: 8px;
+    display: none;
+}
+
+/* Breadcrumb and header nav overrides for contrast */
+.breadcrumb a,
+.breadcrumb a:link,
+.breadcrumb a:visited {
+    color: var(--accent-dark) !important;
+}
+.breadcrumb a:hover {
+    color: var(--accent) !important;
+    text-decoration: underline;
+}
+.breadcrumb .breadcrumb-current {
+    color: var(--accent) !important;
+    font-weight: 700;
+}
+/* Some global CSS sets .breadcrumb span to white; enforce dark color for spans on this page */
+.breadcrumb span,
+.breadcrumb .breadcrumb-section {
+    color: var(--accent-dark) !important;
+}
+.header .nav .nav-link,
+.header .nav .nav-link:link {
+    color: #333 !important;
+}
+.header .nav .nav-link:hover {
+    color: var(--accent) !important;
+}
+
+/* AI Analysis Card */
+.ai-analysis-card .btn-ai-analysis:hover {
+    background: #16a34a !important;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(31, 174, 79, 0.3);
+}
+
+.ai-analysis-card .btn-ai-analysis:active {
+    transform: translateY(0);
+}
+
+.ai-analysis-card .btn-icon {
+    font-size: 18px;
+    margin-right: 8px;
+}
+
+@media (max-width: 900px) {
+    .job-grid {
+        grid-template-columns: 1fr;
+    }
+    .company-card {
+        text-align: left;
+    }
+    .job-card .btn-apply {
+        position: static;
+        display: inline-block;
+        margin-left: auto;
+        margin-top: 10px;
+    }
+    .job-page > .container-inner {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+}
