@@ -1,0 +1,562 @@
+/* Top Employers Section */
+.top-employers-section {
+    background: white;
+    /* reduce vertical padding so this section sits closer to the one above */
+    padding: 30px 0;
+    width: 100%;
+    margin-top: 0;
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 1400px;
+    padding-left: 20px;
+    padding-right: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+}
+
+
+.top-employers-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="%23e9ecef" opacity="0.3"/><circle cx="75" cy="75" r="1" fill="%23e9ecef" opacity="0.3"/><circle cx="50" cy="10" r="0.5" fill="%23e9ecef" opacity="0.2"/><circle cx="10" cy="60" r="0.5" fill="%23e9ecef" opacity="0.2"/><circle cx="90" cy="40" r="0.5" fill="%23e9ecef" opacity="0.2"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+    opacity: 0.1;
+    pointer-events: none;
+}
+
+.top-employers-section .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    position: relative;
+    z-index: 2;
+}
+
+.top-employers-section .section-header h3 {
+    font-size: 28px;
+    font-weight: 700;
+    color: #2c3e50;
+    margin: 0;
+    position: relative;
+    display: inline-block;
+}
+
+
+.top-employers-section .view-all-link {
+    color: #28a745;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 16px;
+    transition: color 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.top-employers-section .view-all-link:hover {
+    color: #20c997;
+}
+
+
+
+/* Employers Container */
+.employers-container {
+    position: relative;
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 0;
+}
+
+.employers-grid {
+    display: flex;
+    gap: 15px;
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+    padding: 20px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    position: relative;
+    justify-content: flex-start;
+}
+
+/* Pagination Container */
+.employers-pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-top: 20px;
+}
+
+.pagination-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #e0e0e0;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.pagination-dot.active {
+    background: #007bff;
+    transform: scale(1.2);
+}
+
+.pagination-dot:hover {
+    background: #007bff;
+    opacity: 0.7;
+}
+
+.employers-grid::-webkit-scrollbar {
+    display: none;
+}
+
+/* Employer Card */
+.employer-card {
+    flex: 0 0 calc((100% - 85px) / 4);
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    min-height: 200px;
+    border: 1px solid #e9ecef;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.employer-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.employer-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 1;
+}
+
+.employer-card:hover::before {
+    opacity: 1;
+}
+
+/* Employer Logo Section */
+.employer-logo-section {
+    height: 120px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    background: #f8f9fa;
+    position: relative;
+    border-radius: 12px 12px 0 0;
+    overflow: hidden;
+}
+
+/* Removed overlay to prevent logo obstruction */
+
+/* Employer Logo */
+.employer-logo {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    position: absolute;
+    top: 100px;
+    left: 25%;
+    transform: translate(-50%, -50%);
+    z-index: 9999;
+    isolation: isolate;
+}
+
+/* Removed thick protection layers */
+
+.employer-card:hover .employer-logo {
+    transform: translate(-50%, -50%) scale(1.1);
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.2);
+}
+
+.employer-logo img {
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
+    border-radius: 50%;
+    max-width: 100%;
+    max-height: 100%;
+}
+
+/* Employer Info */
+.employer-info {
+    padding: 70px 15px 15px 15px;
+    position: relative;
+    z-index: 1;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background: white;
+    border-radius: 0 0 12px 12px;
+    margin-top: -40px;
+}
+
+.employer-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 12px;
+    line-height: 1.3;
+    text-align: left;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.employer-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.job-count,
+.employer-location {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.job-count {
+    color: #667eea;
+    font-weight: 600;
+}
+
+.employer-location {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+}
+
+.employer-location i,
+.job-count i {
+    font-size: 0.8rem;
+    opacity: 0.8;
+    flex-shrink: 0;
+}
+
+/* Navigation Buttons */
+.employers-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: white;
+    border: none;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    z-index: 10;
+    color: #667eea;
+    font-size: 1.2rem;
+}
+
+.employers-nav:hover {
+    background: #667eea;
+    color: white;
+    transform: translateY(-50%) scale(1.1);
+    box-shadow: 0 12px 35px rgba(102, 126, 234, 0.3);
+}
+
+.employers-nav.prev {
+    left: 0px;
+}
+
+.employers-nav.next {
+    right: 0px;
+}
+
+.employers-nav:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: translateY(-50%);
+}
+
+.employers-nav:disabled:hover {
+    background: white;
+    color: #667eea;
+    transform: translateY(-50%);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* Pagination */
+.employers-pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 30px;
+    position: relative;
+    z-index: 2;
+}
+
+.pagination-dots {
+    display: flex;
+    gap: 10px;
+}
+
+.pagination-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #dee2e6;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.pagination-dot.active {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    transform: scale(1.2);
+}
+
+.pagination-dot:hover {
+    background: #667eea;
+    transform: scale(1.1);
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .employer-card {
+        flex: 0 0 250px;
+        min-height: 180px;
+    }
+}
+
+@media (max-width: 768px) {
+    .top-employers-section {
+        padding: 40px 0;
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+    
+    
+    .top-employers-section .section-header h3 {
+        font-size: 20px;
+    }
+    
+    .employers-grid {
+        gap: 12px;
+        padding: 15px;
+    }
+    
+    .employer-card {
+        flex: 0 0 calc((100% - 60px) / 4);
+        min-height: 180px;
+    }
+    
+    .employer-logo-section {
+        height: 100px;
+    }
+    
+    .employer-logo {
+        width: 60px;
+        height: 60px;
+        top: 80px;
+        left: 20%;
+    }
+    
+    .employer-logo img {
+        width: 45px;
+        height: 45px;
+    }
+    
+    .employer-info {
+        padding: 60px 15px 15px 15px;
+    }
+    
+    .employer-name {
+        font-size: 14px;
+    }
+    
+    .employers-nav {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+    
+    .employers-nav.prev {
+        left: -20px;
+    }
+    
+    .employers-nav.next {
+        right: -20px;
+    }
+}
+
+@media (max-width: 600px) {
+    .employer-card {
+        flex: 0 0 calc((100% - 44px) / 4);
+        min-height: 160px;
+    }
+    
+    .employer-logo-section {
+        height: 90px;
+    }
+    
+    .employer-logo {
+        width: 50px;
+        height: 50px;
+        top: 70px;
+        left: 18%;
+    }
+    
+    .employer-logo img {
+        width: 35px;
+        height: 35px;
+    }
+    
+    .employer-info {
+        padding: 55px 15px 15px 15px;
+    }
+    
+    .employer-name {
+        font-size: 13px;
+        margin-bottom: 6px;
+    }
+    
+    .job-count,
+    .employer-location {
+        font-size: 11px;
+        gap: 3px;
+    }
+}
+
+@media (max-width: 480px) {
+    .top-employers-section {
+        padding: 40px 0;
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+    
+    
+    .top-employers-section .section-header h3 {
+        font-size: 18px;
+    }
+    
+    .employers-grid {
+        gap: 8px;
+        padding: 10px;
+    }
+    
+    .employer-card {
+        flex: 0 0 calc((100% - 44px) / 4);
+        min-height: 140px;
+    }
+    
+    .employer-logo-section {
+        height: 80px;
+    }
+    
+    .employer-logo {
+        width: 40px;
+        height: 40px;
+        top: 60px;
+        left: 15%;
+    }
+    
+    .employer-logo img {
+        width: 28px;
+        height: 28px;
+    }
+    
+    .employer-info {
+        padding: 50px 15px 15px 15px;
+    }
+    
+    .employer-name {
+        font-size: 12px;
+        margin-bottom: 4px;
+    }
+    
+    .job-count,
+    .employer-location {
+        font-size: 10px;
+        gap: 2px;
+    }
+}
+
+/* Animation for loading */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.employer-card {
+    animation: fadeInUp 0.6s ease forwards;
+}
+
+.employer-card:nth-child(1) { animation-delay: 0.1s; }
+.employer-card:nth-child(2) { animation-delay: 0.2s; }
+.employer-card:nth-child(3) { animation-delay: 0.3s; }
+.employer-card:nth-child(4) { animation-delay: 0.4s; }
+.employer-card:nth-child(5) { animation-delay: 0.5s; }
+.employer-card:nth-child(6) { animation-delay: 0.6s; }
+
+/* High-specificity override: remove outer panel/box for the top employers section
+   This forces a transparent background, removes shadow, border and rounded corners
+   so the section blends seamlessly with the page. */
+.top-employers-section,
+.top-employers-section .employers-container,
+.top-employers-section .employers-grid,
+.top-employers-section .section-header,
+.top-employers-section .employers-container > .employers-grid {
+    background: transparent !important;
+    box-shadow: none !important;
+    border: 0 none !important;
+    border-radius: 0 !important;
+    margin-bottom: 0 !important;
+}
+
+.top-employers-section .employers-container {
+    padding: 0 !important;
+}
+
+.top-employers-section .section-header {
+    padding: 0 0 18px 0 !important;
+}
