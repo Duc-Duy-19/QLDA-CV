@@ -21,6 +21,16 @@ use App\Http\Controllers\Candidate\ApplicationController as CandidateApplication
 use App\Http\Controllers\Employer\ApplicationController as EmployerApplicationController;
 use App\Http\Controllers\Candidate\SavedJobController;
 use App\Http\Controllers\ChatController;
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\Admin\RevenueReportController;
+
+/*
+|--------------------------------------------------------------------------
+| Payment Routes (Webhook - Public)
+|--------------------------------------------------------------------------
+*/
+// Sepay webhook - no auth required (verified by signature)
+Route::post('/payments/webhook', [PaymentController::class, 'webhook']);
 
 /*
 |--------------------------------------------------------------------------
@@ -67,6 +77,13 @@ Route::middleware(['auth:sanctum', 'check.suspended'])->group(function () {
     // Serve CV by application id (authenticated)
     Route::get('/cv/application/{id}', [\App\Http\Controllers\Candidate\ApplicationController::class, 'serveCvByApplication']);
 
+    // Payment Routes (authenticated users)
+    Route::prefix('payments')->group(function () {
+        Route::get('/my-payments', [PaymentController::class, 'myPayments']); // Get current user's payments
+        Route::get('/{id}', [PaymentController::class, 'show']); // View payment details
+        Route::post('/{id}/confirm', [PaymentController::class, 'confirm']); // User confirms payment
+    });
+
     // Chat Routes (available for all authenticated users)
     Route::prefix('chat')->group(function () {
         Route::get('/conversations', [ChatController::class, 'getConversations']);
@@ -75,6 +92,70 @@ Route::middleware(['auth:sanctum', 'check.suspended'])->group(function () {
         Route::post('/conversations/{conversationId}/messages', [ChatController::class, 'sendMessage']);
         Route::post('/conversations/{conversationId}/read', [ChatController::class, 'markAsRead']);
         Route::get('/applications/{applicationId}/can-chat', [ChatController::class, 'canChatWithApplication']);
+                
+        // AI Career Advisor Routes
+        Route::post('/ai/start', [ChatController::class, 'startAiChat']); // Bắt đầu chat với AI
+        Route::post('/ai/message', [ChatController::class, 'sendToAi']); // Gửi message tới AI
+    });
+
+    // Debug Route
+    Route::get('/debug/ai-config', function() {
+        $apiKey = config('services.gemini.api_key');
+        return response()->json([
+            'gemini_api_key_set' => !empty($apiKey),
+            'api_key_length' => $apiKey ? strlen($apiKey) : 0,
+            'api_key_preview' => $apiKey ? substr($apiKey, 0, 10) . '...' : 'NOT SET',
+            'config_path' => config_path('services.php'),
+            'env_loaded' => env('GEMINI_API_KEY') ? 'YES' : 'NO',
+        ]);
+    });
+
+    Route::get('/debug/logs', function() {
+        $logPath = storage_path('logs/laravel.log');
+        if (!file_exists($logPath)) {
+            return 'Log file not found';
+        }
+        
+        $lines = file($logPath);
+        $lastLines = array_slice($lines, -200); // Last 200 lines
+        
+        $output = '';
+        foreach ($lastLines as $line) {
+            if (stripos($line, 'gemini') !== false || 
+                stripos($line, 'AI Career') !== false ||
+                stripos($line, 'error') !== false) {
+                $output .= htmlspecialchars($line);
+            }
+        }
+        
+        return $output ?: 'No relevant logs found';
+    });
+
+    Route::get('/debug/test-gemini', function() {
+        $apiKey = config('services.gemini.api_key');
+        $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+        
+        try {
+            $response = \Illuminate\Support\Facades\Http::withoutVerifying()
+                ->timeout(30)
+                ->post($url . '?key=' . $apiKey, [
+                    'contents' => [
+                        ['parts' => [['text' => 'Test message: Hello']]]
+                    ]
+                ]);
+
+            return [
+                'status' => $response->status(),
+                'success' => $response->successful(),
+                'body' => $response->json(),
+                'api_key_used' => substr($apiKey, 0, 10) . '...'
+            ];
+        } catch (\Exception $e) {
+            return [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ];
+        }
     });
 });
 /*
@@ -122,6 +203,7 @@ Route::middleware(['auth:sanctum', 'check.suspended', 'role:employer'])->group(f
     // Cập nhật thông tin công ty
     Route::get('/my-company', [EmployerCompanyController::class, 'getMyCompany']);
     Route::put('/companies/{id}', [EmployerCompanyController::class, 'update']);
+    Route::put('/companies/{id}/context', [EmployerCompanyController::class, 'updateCompanyContext']);
 
     // Quản lý nhân sự nội bộ công ty
     Route::prefix('companies/{companyId}')->group(function () {
@@ -209,7 +291,44 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     Route::get('/admin/dashboard', function () {
         return response()->json(['message' => 'Admin dashboard']);
     });
+
+    // Payment Management Routes (Admin only)
+    Route::prefix('admin/payments')->group(function () {
+        Route::get('/pending', [PaymentController::class, 'index']); // List payments pending verification
+        Route::post('/{id}/approve', [PaymentController::class, 'approve']); // Admin approves payment
+        Route::post('/{id}/reject', [PaymentController::class, 'reject']); // Admin rejects payment
+    });
+
+    // Revenue Report Routes (Admin only)
+    Route::prefix('admin/revenue')->group(function () {
+        Route::get('/data', [RevenueReportController::class, 'getRevenueData']);
+        Route::get('/export', [RevenueReportController::class, 'export']);
+    });
+
+    // Industry Contexts Management (Admin only)
+    Route::prefix('admin/industry-contexts')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\IndustryContextController::class, 'index']);
+        Route::post('/', [\App\Http\Controllers\Admin\IndustryContextController::class, 'store']);
+        Route::get('/{id}', [\App\Http\Controllers\Admin\IndustryContextController::class, 'show']);
+        Route::put('/{id}', [\App\Http\Controllers\Admin\IndustryContextController::class, 'update']);
+        Route::delete('/{id}', [\App\Http\Controllers\Admin\IndustryContextController::class, 'destroy']);
+        Route::patch('/{id}/toggle', [\App\Http\Controllers\Admin\IndustryContextController::class, 'toggleActive']);
+    });
 });
+/*
+|--------------------------------------------------------------------------
+| AI Analysis Routes
+|--------------------------------------------------------------------------
+*/
+// AI Feedback - Allow both authenticated users and guests
+Route::post('ai/feedback', [\App\Http\Controllers\AiFeedbackController::class, 'store']);
+
+Route::middleware('auth:sanctum')->group(function () {
+    // AI matching với CV đã tạo trên website
+    Route::post('ai/check-match', [\App\Http\Controllers\AiAnalysisController::class, 'checkMatch']);
+});
+
+
 Route::get('debug/me', function () {
     return response()->json([
         'user' => auth()->user(),
