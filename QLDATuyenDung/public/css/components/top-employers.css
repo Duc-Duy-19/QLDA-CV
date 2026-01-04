@@ -240,14 +240,14 @@
 .employer-stats {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 4px;
 }
 
 .job-count,
 .employer-location {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
     font-size: 14px;
     color: #6c757d;
     font-weight: 500;
@@ -258,18 +258,10 @@
     font-weight: 600;
 }
 
-.employer-location {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    max-width: 100%;
-}
-
-.employer-location i,
-.job-count i {
+.job-count i,
+.employer-location i {
     font-size: 0.8rem;
     opacity: 0.8;
-    flex-shrink: 0;
 }
 
 /* Navigation Buttons */

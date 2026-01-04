@@ -108,10 +108,6 @@ Route::get('/category/*', function () {
 // Nhóm Routes Authentication (Login, Register, Reset, Logout)
 // =========================================================================
 
-// Google OAuth Routes
-Route::get('/auth/google/redirect', [App\Http\Controllers\Auth\GoogleController::class, 'redirect'])->name('auth.google.redirect');
-Route::get('/auth/google/callback', [App\Http\Controllers\Auth\GoogleController::class, 'callback'])->name('auth.google.callback');
-
 Route::get('/login', function () {
     return view('auth.login');
 })->name('login');
@@ -266,11 +262,6 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::get('/chat', function () {
         return view('chat');
     })->name('chat.index');
-
-    // Payment Routes
-    Route::get('/payment/{paymentId}', function ($paymentId) {
-        return view('payment.show', ['paymentId' => $paymentId]);
-    })->name('payment.show');
 });
 
 // =========================================================================
@@ -383,11 +374,6 @@ Route::prefix('candidate')->middleware(['web', 'auth'])->group(function () {
 // =========================================================================
 
 Route::prefix('employer')->middleware(['web', 'auth', 'role:employer'])->group(function () {
-    Route::get('/dashboard', function () {
-        // Employer dashboard - redirect to jobs page
-        return redirect()->route('employer.jobs');
-    })->name('employer.dashboard');
-
     Route::get('/profile', function () {
         // Employer profile view moved into company.info — reuse that view for now.
         return view('company.info');
@@ -610,35 +596,6 @@ Route::prefix('admin')->middleware(['web', 'auth', 'role:admin'])->group(functio
         return view('admin.categories');
     })->name('admin.categories');
 
-    // Industry Contexts Management (Quản lý Ngữ cảnh Ngành)
-    Route::get('/industry-contexts', [App\Http\Controllers\Admin\IndustryContextController::class, 'index'])
-        ->name('admin.industry-contexts.index');
-    Route::get('/industry-contexts/create', [App\Http\Controllers\Admin\IndustryContextController::class, 'create'])
-        ->name('admin.industry-contexts.create');
-    Route::post('/industry-contexts', [App\Http\Controllers\Admin\IndustryContextController::class, 'store'])
-        ->name('admin.industry-contexts.store');
-    Route::get('/industry-contexts/{id}/edit', [App\Http\Controllers\Admin\IndustryContextController::class, 'edit'])
-        ->name('admin.industry-contexts.edit');
-    Route::put('/industry-contexts/{id}', [App\Http\Controllers\Admin\IndustryContextController::class, 'update'])
-        ->name('admin.industry-contexts.update');
-    Route::delete('/industry-contexts/{id}', [App\Http\Controllers\Admin\IndustryContextController::class, 'destroy'])
-        ->name('admin.industry-contexts.destroy');
-    Route::patch('/industry-contexts/{id}/toggle', [App\Http\Controllers\Admin\IndustryContextController::class, 'toggleActive'])
-        ->name('admin.industry-contexts.toggle');
-
-    // AI Feedback Management
-    Route::get('/ai-feedback', function () {
-        return view('admin.ai-feedback');
-    })->name('admin.ai-feedback');
-
-    // Payment Management
-    Route::get('/payments/pending', function () {
-        return view('admin.payments-pending');
-    })->name('admin.payments.pending');
-
-    // Revenue Report
-    Route::get('/revenue-report', [App\Http\Controllers\Admin\RevenueReportController::class, 'index'])->name('admin.revenue-report');
-
 
     // --- Admin API Routes (Sử dụng session auth) ---
     Route::prefix('api')->group(function () {
@@ -750,14 +707,6 @@ Route::prefix('admin')->middleware(['web', 'auth', 'role:admin'])->group(functio
 
         return response()->json($user);
     })->name('admin.users.show');
-});
-
-// =========================================================================
-// Admin AI Feedback API Routes (session-based auth)
-// =========================================================================
-Route::middleware(['auth', 'role:admin'])->prefix('api/admin')->group(function () {
-    Route::get('ai/feedback/stats', [\App\Http\Controllers\AiFeedbackController::class, 'stats']);
-    Route::get('ai/feedback/problematic', [\App\Http\Controllers\AiFeedbackController::class, 'problematic']);
 });
 
 // =========================================================================

@@ -1508,10 +1508,6 @@ html {
     color: #333;
     font-size: 18px;
     font-weight: 600;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    max-width: 100%;
 }
 
 .job-salary {
@@ -1608,7 +1604,7 @@ html {
 /* Floating Elements */
 .floating-elements {
     position: fixed;
-    bottom: 180px;
+    bottom: 20px;
     right: 20px;
     z-index: 1000;
 }
@@ -2943,7 +2939,7 @@ html {
 
         .floating-elements {
             position: fixed;
-            bottom: 180px;
+            bottom: 20px;
             right: 20px;
             z-index: 1000;
         }
@@ -3226,7 +3222,7 @@ html {
 
             
             .floating-elements {
-                bottom: 140px;
+                bottom: 10px;
                 right: 10px;
             }
             

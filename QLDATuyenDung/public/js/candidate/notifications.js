@@ -64,9 +64,6 @@ async function loadNotifications() {
         // Load company invites and convert to notifications
         await loadAndConvertCompanyInvites();
         
-        // Load payment notifications
-        await loadPaymentNotifications();
-        
         // Sort all notifications by date
         filteredNotifications = [...notifications].sort((a, b) => new Date(b.date) - new Date(a.date));
         renderNotifications();
@@ -79,69 +76,6 @@ async function loadNotifications() {
         notifications = [];
         filteredNotifications = [];
         renderNotifications();
-    }
-}
-
-// Load payment notifications
-async function loadPaymentNotifications() {
-    try {
-        const token = getAuthToken();
-        if (!token) return;
-
-        const response = await fetch(`${API_BASE_URL}/payments/my-payments`, {
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Accept': 'application/json',
-            },
-        });
-
-        if (!response.ok) {
-            return; // Silently fail if no payments
-        }
-
-        const data = await response.json();
-        const payments = data.payments || [];
-
-        // Convert payments to notifications
-        payments.forEach(payment => {
-            if (payment.status === 'pending' || payment.status === 'pending_verification') {
-                const notificationId = `payment_${payment.id}`;
-                
-                // Check if notification already exists
-                const existing = notifications.find(n => n.id === notificationId);
-                if (existing) {
-                    return; // Skip if already exists
-                }
-
-                const notification = {
-                    id: notificationId,
-                    type: 'payment_required',
-                    title: payment.status === 'pending' 
-                        ? 'Thanh toán để nâng cấp lên nhà tuyển dụng'
-                        : 'Thanh toán đang chờ xác minh',
-                    message: payment.status === 'pending'
-                        ? `Công ty ${payment.company?.company_name || ''} đã được duyệt. Vui lòng thanh toán để hoàn tất nâng cấp.`
-                        : `Thanh toán cho công ty ${payment.company?.company_name || ''} đang chờ admin xác minh.`,
-                    date: payment.created_at || new Date().toISOString(),
-                    read: false,
-                    priority: 'high',
-                    data: {
-                        payment_id: payment.id,
-                        company_id: payment.company_id,
-                        company_name: payment.company?.company_name,
-                        amount: payment.amount,
-                        qr_code_url: payment.qr_code_url,
-                        qr_code_data: payment.qr_code_data,
-                        order_id: payment.sepay_order_id,
-                    },
-                };
-
-                notifications.push(notification);
-            }
-        });
-
-    } catch (error) {
-        console.error('Lỗi khi tải payment notifications:', error);
     }
 }
 
@@ -239,8 +173,6 @@ function renderNotifications() {
         
         // Special handling for invite notifications
         let actionButtons = '';
-        let qrCodeSection = '';
-        
         if (notification.type === 'invite' && notification.invite_data) {
             const invite = notification.invite_data;
             const companyId = invite.company_id;
@@ -252,62 +184,6 @@ function renderNotifications() {
                     <i class="fas fa-times"></i> Từ chối
                 </button>
             `;
-        } else if (notification.type === 'payment_required' && notification.data) {
-            // Payment required notification
-            const paymentId = notification.data.payment_id;
-            const amount = notification.data.amount || 0;
-            const formattedAmount = new Intl.NumberFormat('vi-VN').format(amount);
-            const qrCodeUrl = notification.data.qr_code_url;
-            const qrCodeData = notification.data.qr_code_data || notification.data.qr_code;
-            
-            // QR Code section
-            if (qrCodeUrl || qrCodeData) {
-                const qrCodeSrc = qrCodeUrl 
-                    ? qrCodeUrl 
-                    : (qrCodeData.startsWith('data:') ? qrCodeData : `data:image/png;base64,${qrCodeData}`);
-                
-                qrCodeSection = `
-                    <div style="margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px; text-align: center; border: 2px solid #28a745;">
-                        <p style="font-weight: 600; color: #28a745; margin-bottom: 10px; font-size: 16px;">
-                            Số tiền: ${formattedAmount} VND
-                        </p>
-                        <img src="${qrCodeSrc}" 
-                             alt="QR Code Thanh toán" 
-                             style="max-width: 200px; width: 100%; border: 2px solid #28a745; border-radius: 8px; padding: 10px; background: white; margin: 10px 0;">
-                        <p style="font-size: 12px; color: #666; margin-top: 10px;">
-                            Quét mã QR để thanh toán
-                        </p>
-                    </div>
-                `;
-            }
-            
-            // Action buttons
-            if (paymentId) {
-                actionButtons = `
-                    <a href="/payment/${paymentId}" class="btn btn-sm btn-success" style="text-decoration: none; display: inline-block;">
-                        <i class="fas fa-credit-card"></i> Xem thanh toán
-                    </a>
-                    ${!isRead ? `
-                        <button class="btn btn-sm btn-primary" onclick="markAsRead('${notification.id}')">
-                            <i class="fas fa-check"></i> Đánh dấu đã đọc
-                        </button>
-                    ` : ''}
-                    <button class="btn btn-sm btn-danger" onclick="deleteNotification('${notification.id}')">
-                        <i class="fas fa-trash"></i> Xóa
-                    </button>
-                `;
-            } else {
-                actionButtons = `
-                    ${!isRead ? `
-                        <button class="btn btn-sm btn-primary" onclick="markAsRead('${notification.id}')">
-                            <i class="fas fa-check"></i> Đánh dấu đã đọc
-                        </button>
-                    ` : ''}
-                    <button class="btn btn-sm btn-danger" onclick="deleteNotification('${notification.id}')">
-                        <i class="fas fa-trash"></i> Xóa
-                    </button>
-                `;
-            }
         } else {
             actionButtons = `
                 ${!isRead ? `
@@ -332,7 +208,6 @@ function renderNotifications() {
                     <span class="notification-date">${formattedDate}</span>
                 </div>
                 <p class="notification-message">${notification.message}</p>
-                ${qrCodeSection}
                 <div class="notification-actions">
                     ${actionButtons}
                 </div>
@@ -349,7 +224,6 @@ function getTypeIcon(type) {
         'interview': 'fas fa-calendar-alt',
         'offer': 'fas fa-handshake',
         'invite': 'fas fa-envelope',
-        'payment_required': 'fas fa-credit-card',
         'system': 'fas fa-cog'
     };
     return icons[type] || 'fas fa-bell';

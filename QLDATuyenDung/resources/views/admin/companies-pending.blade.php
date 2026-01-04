@@ -14,7 +14,7 @@
             </button>
         </div>
     </div>
-
+    
     <table class="table">
         <thead>
             <tr>
@@ -54,54 +54,61 @@
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function() {
+    loadPendingCompanies();
+    
+    // Real-time updates: Polling mỗi 5 giây
+    setInterval(function() {
+        console.log('🔄 Kiểm tra cập nhật dữ liệu...');
         loadPendingCompanies();
-    });
+        checkUserRoleUpdate(); // Kiểm tra cập nhật role
+    }, 5000); // 5 giây
+});
 
-    // Function load danh sách công ty chờ duyệt từ API
-    async function loadPendingCompanies() {
-        try {
-            // Lấy token từ localStorage
-            const authToken = localStorage.getItem('authToken');
-            if (!authToken) {
-                console.error('Không tìm thấy token xác thực');
-                showError('Vui lòng đăng nhập lại');
-                return;
-            }
-
-            console.log('🔍 Đang tải danh sách công ty chờ duyệt...');
-            // Gọi web route thay vì API route để sử dụng session authentication
-            const response = await fetch('/admin/api/companies/pending', {
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            console.log('🔍 Phản hồi API tải công ty chờ duyệt:', response.status, response.statusText);
-            if (response.ok) {
-                const companies = await response.json();
-                console.log('🔍 Dữ liệu công ty chờ duyệt nhận được:', companies);
-                updateCompaniesTable(companies);
-                document.getElementById('companiesCount').textContent = companies.length;
-                console.log('Đã tải danh sách công ty chờ duyệt thành công');
-            } else {
-                console.error('Lỗi khi tải danh sách công ty:', response.status);
-                showError('Không thể tải danh sách công ty');
-            }
-        } catch (error) {
-            console.error('Lỗi khi gọi API:', error);
-            showError('Có lỗi xảy ra khi tải dữ liệu');
+// Function load danh sách công ty chờ duyệt từ API
+async function loadPendingCompanies() {
+    try {
+        // Lấy token từ localStorage
+        const authToken = localStorage.getItem('authToken');
+        if (!authToken) {
+            console.error('Không tìm thấy token xác thực');
+            showError('Vui lòng đăng nhập lại');
+            return;
         }
+
+        console.log('🔍 Đang tải danh sách công ty chờ duyệt...');
+        // Gọi web route thay vì API route để sử dụng session authentication
+        const response = await fetch('/admin/api/companies/pending', {
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            }
+        });
+
+        console.log('🔍 Phản hồi API tải công ty chờ duyệt:', response.status, response.statusText);
+        if (response.ok) {
+            const companies = await response.json();
+            console.log('🔍 Dữ liệu công ty chờ duyệt nhận được:', companies);
+            updateCompaniesTable(companies);
+            document.getElementById('companiesCount').textContent = companies.length;
+            console.log('Đã tải danh sách công ty chờ duyệt thành công');
+        } else {
+            console.error('Lỗi khi tải danh sách công ty:', response.status);
+            showError('Không thể tải danh sách công ty');
+        }
+    } catch (error) {
+        console.error('Lỗi khi gọi API:', error);
+        showError('Có lỗi xảy ra khi tải dữ liệu');
     }
+}
 
-    // Function cập nhật bảng công ty
-    function updateCompaniesTable(companies) {
-        const tbody = document.getElementById('companiesTableBody');
-
-        if (companies.length === 0) {
-            tbody.innerHTML = `
+// Function cập nhật bảng công ty
+function updateCompaniesTable(companies) {
+    const tbody = document.getElementById('companiesTableBody');
+    
+    if (companies.length === 0) {
+        tbody.innerHTML = `
             <tr>
                 <td colspan="6" style="text-align: center; padding: 60px; color: #7f8c8d;">
                     <i class="fas fa-inbox" style="font-size: 64px; margin-bottom: 20px; display: block; color: #bdc3c7;"></i>
@@ -110,18 +117,15 @@
                 </td>
             </tr>
         `;
-            return;
-        }
+        return;
+    }
 
-        tbody.innerHTML = companies.map(company => `
+    tbody.innerHTML = companies.map(company => `
         <tr>
             <td>
                 <div style="display: flex; align-items: center; gap: 15px;">
                     ${company.logo ? 
-                        `<img src="${company.logo}" alt="Logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid #ecf0f1;">
-                        <div style="display:none; width: 50px; height: 50px; background: #ecf0f1; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                            <i class="fas fa-building" style="color: #7f8c8d; font-size: 20px;"></i>
-                        </div>` :
+                        `<img src="${company.logo}" alt="Logo" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid #ecf0f1;">` :
                         `<div style="width: 50px; height: 50px; background: #ecf0f1; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
                             <i class="fas fa-building" style="color: #7f8c8d; font-size: 20px;"></i>
                         </div>`
@@ -154,75 +158,75 @@
             </td>
             <td>
                 <div style="display: flex; gap: 5px; flex-wrap: wrap;">
-                    <button class="btn btn-info btn-view-company" data-company-id="${company.id}" style="padding: 6px 12px; font-size: 12px;">
+                    <button class="btn btn-info" onclick="viewCompany(${company.id})" style="padding: 6px 12px; font-size: 12px;">
                         <i class="fas fa-eye"></i> Xem
                     </button>
-                    <button class="btn btn-success btn-approve-company" data-company-id="${company.id}" data-company-name="${company.company_name.replace(/"/g, '&quot;')}" style="padding: 6px 12px; font-size: 12px;">
+                    <button class="btn btn-success" onclick="approveCompany(${company.id}, '${company.company_name}')" style="padding: 6px 12px; font-size: 12px;">
                         <i class="fas fa-check"></i> Duyệt
                     </button>
-                    <button class="btn btn-danger btn-reject-company" data-company-id="${company.id}" data-company-name="${company.company_name.replace(/"/g, '&quot;')}" style="padding: 6px 12px; font-size: 12px;">
+                    <button class="btn btn-danger" onclick="rejectCompany(${company.id}, '${company.company_name}')" style="padding: 6px 12px; font-size: 12px;">
                         <i class="fas fa-times"></i> Từ chối
                     </button>
                 </div>
             </td>
         </tr>
     `).join('');
-    }
+}
 
-    // Function kiểm tra và cập nhật role user
-    function checkUserRoleUpdate() {
-        const currentUser = localStorage.getItem('currentUser');
-        if (currentUser) {
-            const user = JSON.parse(currentUser);
-            console.log('🔍 Kiểm tra role hiện tại:', user.role);
-
-            // Nếu role đã thay đổi thành employer, thông báo và cập nhật giao diện
-            if (user.role === 'employer') {
-                console.log('🔍 User đã được nâng cấp lên nhà tuyển dụng!');
-                updateUserInterface(user);
-            }
+// Function kiểm tra và cập nhật role user
+function checkUserRoleUpdate() {
+    const currentUser = localStorage.getItem('currentUser');
+    if (currentUser) {
+        const user = JSON.parse(currentUser);
+        console.log('🔍 Kiểm tra role hiện tại:', user.role);
+        
+        // Nếu role đã thay đổi thành employer, thông báo và cập nhật giao diện
+        if (user.role === 'employer') {
+            console.log('🔍 User đã được nâng cấp lên nhà tuyển dụng!');
+            updateUserInterface(user);
         }
     }
+}
 
-    // Function cập nhật giao diện user
-    function updateUserInterface(user) {
-        // Cập nhật role trong header (nếu có)
-        const roleElement = document.querySelector('.user-role');
-        if (roleElement) {
-            roleElement.textContent = 'Nhà Tuyển Dụng';
-            console.log('🔍 Đã cập nhật role trong header');
-        }
-
-        // Hiển thị thông báo thành công
-        alert('🎉 Chúc mừng! Tài khoản của bạn đã được nâng cấp lên Nhà Tuyển Dụng!');
-
-        // Có thể thêm logic khác như:
-        // - Cập nhật menu navigation
-        // - Thay đổi màu sắc giao diện
-        // - Redirect đến trang employer dashboard
-        console.log('🔍 Giao diện đã được cập nhật cho role:', user.role);
+// Function cập nhật giao diện user
+function updateUserInterface(user) {
+    // Cập nhật role trong header (nếu có)
+    const roleElement = document.querySelector('.user-role');
+    if (roleElement) {
+        roleElement.textContent = 'Nhà Tuyển Dụng';
+        console.log('🔍 Đã cập nhật role trong header');
     }
+    
+    // Hiển thị thông báo thành công
+    alert('🎉 Chúc mừng! Tài khoản của bạn đã được nâng cấp lên Nhà Tuyển Dụng!');
+    
+    // Có thể thêm logic khác như:
+    // - Cập nhật menu navigation
+    // - Thay đổi màu sắc giao diện
+    // - Redirect đến trang employer dashboard
+    console.log('🔍 Giao diện đã được cập nhật cho role:', user.role);
+}
 
 
 
 
-    function showError(message) {
-        const tbody = document.getElementById('companiesTableBody');
-        tbody.innerHTML = `
+function showError(message) {
+    const tbody = document.getElementById('companiesTableBody');
+    tbody.innerHTML = `
         <tr>
             <td colspan="6" class="text-center text-danger">
                 ${message}
             </td>
         </tr>
     `;
-    }
+}
 
-    function viewCompany(companyId) {
-        // Load chi tiết công ty bằng AJAX
-        fetch(`/admin/companies/${companyId}`)
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('companyDetails').innerHTML = `
+function viewCompany(companyId) {
+    // Load chi tiết công ty bằng AJAX
+    fetch(`/admin/companies/${companyId}`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('companyDetails').innerHTML = `
                 <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 20px;">
                     ${data.logo ? `<img src="${data.logo}" alt="Logo" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover;">` : '<div style="width: 80px; height: 80px; background: #ecf0f1; border-radius: 50%; display: flex; align-items: center; justify-content: center;"><i class="fas fa-building" style="color: #7f8c8d; font-size: 32px;"></i></div>'}
                     <div>
@@ -249,153 +253,123 @@
                     <p style="line-height: 1.6;">${data.description || 'Không có mô tả'}</p>
                 </div>
             `;
-                document.getElementById('companyModal').style.display = 'block';
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Có lỗi xảy ra khi tải thông tin công ty');
-            });
+            document.getElementById('companyModal').style.display = 'block';
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Có lỗi xảy ra khi tải thông tin công ty');
+        });
+}
+
+function closeModal() {
+    document.getElementById('companyModal').style.display = 'none';
+}
+
+function filterCompanies() {
+    const searchTerm = document.getElementById('searchInput').value;
+    // Implement search functionality
+    console.log('Searching for:', searchTerm);
+}
+
+// Approve company function
+async function approveCompany(companyId, companyName) {
+    if (!confirm(`Bạn có chắc chắn muốn duyệt công ty "${companyName}"?`)) {
+        return;
     }
 
-    function closeModal() {
-        document.getElementById('companyModal').style.display = 'none';
-    }
+    try {
+        console.log(`🔍 Đang duyệt công ty: ${companyName} (ID: ${companyId})`);
+        const response = await fetch(`/admin/api/companies/${companyId}/approve`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            }
+        });
 
-    function filterCompanies() {
-        const searchTerm = document.getElementById('searchInput').value;
-        // Implement search functionality
-        console.log('Searching for:', searchTerm);
-    }
+        console.log('🔍 Phản hồi API duyệt công ty:', response.status, response.statusText);
+        const data = await response.json();
+        console.log('🔍 Dữ liệu phản hồi API duyệt công ty:', data);
 
-    // Approve company function
-    async function approveCompany(companyId, companyName) {
-        const confirmed = confirm(`Bạn có chắc chắn muốn duyệt công ty "${companyName}"?`);
-        if (!confirmed) {
-            return;
-        }
+        if (response.ok) {
+            alert('Công ty đã được duyệt thành công!');
+            console.log('🔍 Đang tải lại danh sách công ty...');
 
-        try {
-            console.log(`🔍 Đang duyệt công ty: ${companyName} (ID: ${companyId})`);
-            const response = await fetch(`/admin/api/companies/${companyId}/approve`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
-                }
-            });
+            // NOTE: API approve endpoint returns only company (no user info).
+            // Để lấy email / role của owner (nếu cần), frontend sẽ gọi endpoint show company
+            try {
+                const companyResp = await fetch(`/admin/companies/${companyId}`, { credentials: 'same-origin' });
+                if (companyResp.ok) {
+                    const company = await companyResp.json();
+                    console.log('🔍 Chi tiết company sau khi duyệt:', company);
 
-            console.log('🔍 Phản hồi API duyệt công ty:', response.status, response.statusText);
-            const data = await response.json();
-            console.log('🔍 Dữ liệu phản hồi API duyệt công ty:', data);
-
-            if (response.ok) {
-                alert('Công ty đã được duyệt thành công!');
-                console.log('🔍 Đang tải lại danh sách công ty...');
-
-                // NOTE: API approve endpoint returns only company (no user info).
-                // Để lấy email / role của owner (nếu cần), frontend sẽ gọi endpoint show company
-                try {
-                    const companyResp = await fetch(`/admin/companies/${companyId}`, {
-                        credentials: 'same-origin'
-                    });
-                    if (companyResp.ok) {
-                        const company = await companyResp.json();
-                        console.log('🔍 Chi tiết company sau khi duyệt:', company);
-
-                        // Nếu currentUser là owner hoặc thành viên công ty, cập nhật localStorage
-                        try {
-                            const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
-                            if (currentUser && currentUser.id) {
-                                const member = (company.users || []).find(u => u.id === currentUser.id);
-                                if (member && member.role) {
-                                    currentUser.role = member.role;
-                                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                                    console.log('🔍 Role đã được cập nhật trong localStorage từ company.show');
-                                }
+                    // Nếu currentUser là owner hoặc thành viên công ty, cập nhật localStorage
+                    try {
+                        const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+                        if (currentUser && currentUser.id) {
+                            const member = (company.users || []).find(u => u.id === currentUser.id);
+                            if (member && member.role) {
+                                currentUser.role = member.role;
+                                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                                console.log('🔍 Role đã được cập nhật trong localStorage từ company.show');
                             }
-                        } catch (e) {
-                            console.warn('Không thể cập nhật localStorage currentUser:', e);
                         }
-                    } else {
-                        console.warn('Không thể lấy chi tiết company sau khi duyệt:', companyResp.status);
+                    } catch (e) {
+                        console.warn('Không thể cập nhật localStorage currentUser:', e);
                     }
-                } catch (e) {
-                    console.error('Lỗi khi fetch chi tiết company sau khi duyệt:', e);
+                } else {
+                    console.warn('Không thể lấy chi tiết company sau khi duyệt:', companyResp.status);
                 }
-
-                loadPendingCompanies(); // Reload danh sách
-            } else {
-                alert('Có lỗi xảy ra: ' + (data.message || 'Không thể duyệt công ty'));
+            } catch (e) {
+                console.error('Lỗi khi fetch chi tiết company sau khi duyệt:', e);
             }
-        } catch (error) {
-            console.error('Error:', error);
-            alert('Có lỗi xảy ra khi duyệt công ty');
+
+            loadPendingCompanies(); // Reload danh sách
+        } else {
+            alert('Có lỗi xảy ra: ' + (data.message || 'Không thể duyệt công ty'));
         }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Có lỗi xảy ra khi duyệt công ty');
+    }
+}
+
+// Reject company function
+async function rejectCompany(companyId, companyName) {
+    if (!confirm(`Bạn có chắc chắn muốn từ chối công ty "${companyName}"?`)) {
+        return;
     }
 
-    // Reject company function
-    async function rejectCompany(companyId, companyName) {
-        const confirmed = confirm(`Bạn có chắc chắn muốn từ chối công ty "${companyName}"?`);
-        if (!confirmed) {
-            return;
-        }
-
-        try {
-            const response = await fetch(`/admin/api/companies/${companyId}/reject`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                alert('Công ty đã bị từ chối!');
-                loadPendingCompanies(); // Reload danh sách
-            } else {
-                alert('Có lỗi xảy ra: ' + (data.message || 'Không thể từ chối công ty'));
+    try {
+        const response = await fetch(`/admin/api/companies/${companyId}/reject`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
             }
-        } catch (error) {
-            console.error('Error:', error);
-            alert('Có lỗi xảy ra khi từ chối công ty');
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            alert('Công ty đã bị từ chối!');
+            loadPendingCompanies(); // Reload danh sách
+        } else {
+            alert('Có lỗi xảy ra: ' + (data.message || 'Không thể từ chối công ty'));
         }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Có lỗi xảy ra khi từ chối công ty');
     }
+}
 
-    // Event delegation for buttons
-    document.addEventListener('click', function(e) {
-        // View company button
-        if (e.target.closest('.btn-view-company')) {
-            const btn = e.target.closest('.btn-view-company');
-            const companyId = btn.dataset.companyId;
-            if (companyId) viewCompany(companyId);
-        }
-
-        // Approve company button
-        if (e.target.closest('.btn-approve-company')) {
-            const btn = e.target.closest('.btn-approve-company');
-            const companyId = btn.dataset.companyId;
-            const companyName = btn.dataset.companyName;
-            if (companyId && companyName) approveCompany(companyId, companyName);
-        }
-
-        // Reject company button
-        if (e.target.closest('.btn-reject-company')) {
-            const btn = e.target.closest('.btn-reject-company');
-            const companyId = btn.dataset.companyId;
-            const companyName = btn.dataset.companyName;
-            if (companyId && companyName) rejectCompany(companyId, companyName);
-        }
-    });
-
-    // Close modal when clicking outside
-    document.getElementById('companyModal').addEventListener('click', function(e) {
-        if (e.target === this) {
-            closeModal();
-        }
-    });
+// Close modal when clicking outside
+document.getElementById('companyModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeModal();
+    }
+});
 </script>
 @endsection

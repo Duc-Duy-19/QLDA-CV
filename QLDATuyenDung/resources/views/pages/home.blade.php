@@ -1,6 +1,6 @@
+
 <!DOCTYPE html>
 <html lang="vi">
-
 <head>
     @include('layouts.head')
     <link rel="stylesheet" href="{{ asset('css/shared/header.css') }}">
@@ -8,9 +8,8 @@
     <link rel="stylesheet" href="{{ asset('css/pages/home.css') }}">
     <link rel="stylesheet" href="{{ asset('css/components/top-employers.css') }}">
 </head>
-
 <body class="home-page">
-
+    
     @include('layouts.header')
 
     <main class="main">
@@ -25,7 +24,7 @@
                     <i class="fas fa-chevron-right"></i>
                 </button>
             </div>
-
+            
             <!-- Banner Pagination Dots -->
             <div class="banner-pagination" id="banner-pagination">
                 <!-- Dots will be generated here -->
@@ -40,7 +39,7 @@
                     <div class="section-header">
                         <h3>Việc làm mới nhất</h3>
                     </div>
-
+                    
                     <div class="filter-section">
                         <span>Lọc theo: Địa điểm</span>
                         <div class="filter-tags">
@@ -50,70 +49,76 @@
                             <button class="filter-tag" data-location="Đà Nẵng">Đà Nẵng</button>
                         </div>
                     </div>
-
-                    <!-- Jobs List -->
-                    <div class="jobs-list" id="jobs-list">
-                        <!-- Jobs will be loaded here -->
-                    </div>
-                    <div id="job-detail-popup" class="job-detail-popup "></div>
-
-                </div>
+      
+                        <!-- Jobs List -->
+                        <div class="jobs-list" id="jobs-list">
+                            <!-- Jobs will be loaded here -->
+                        </div>
+                        <div id="job-detail-popup" class="job-detail-popup "></div>
+                        
+            </div>
         </section>
 
-        <!-- Job Categories Section - Separate from Best Jobs -->
-        <section id="job-categories" class="job-categories-section">
+    <!-- Job Categories Section - Separate from Best Jobs -->
+    <section id="job-categories" class="job-categories-section">
             <div class="container-inner">
                 <div class="section-header">
                     <h3>Việc làm theo ngành nghề</h3>
                 </div>
-
+                
                 <div class="categories-container">
                     <button class="categories-nav prev" onclick="scrollCategories('left')">
                         <i class="fas fa-chevron-left"></i>
                     </button>
-
+                    
                     <div class="categories-grid" id="categories-grid">
                         <!-- Categories will be loaded here -->
                     </div>
-
+                    
                     <button class="categories-nav next" onclick="scrollCategories('right')">
                         <i class="fas fa-chevron-right"></i>
                     </button>
                 </div>
+                
+                <div class="categories-pagination">
+                    <div class="pagination-dots" id="pagination-dots">
+                        <!-- Pagination dots will be generated here -->
+                    </div>
+                </div>
             </div>
         </section>
-
+        
         <!-- Top Employers Section -->
         <section class="top-employers-section">
             <div class="section-header">
                 <h3>Nhà tuyển dụng hàng đầu</h3>
                 <a href="#" class="view-all-link" onclick="showAllCompanies()">
-                    Xem tất cả
+                    Xem tất cả 
                     <i class="fas fa-chevron-right"></i>
                 </a>
             </div>
-
+            
             <div class="employers-container">
                 <button class="employers-nav prev" onclick="scrollEmployers('left')">
                     <i class="fas fa-chevron-left"></i>
                 </button>
-
+                
                 <div class="employers-grid" id="employers-grid">
                     <!-- Top employers will be loaded here -->
                 </div>
-
+                
                 <button class="employers-nav next" onclick="scrollEmployers('right')">
                     <i class="fas fa-chevron-right"></i>
                 </button>
             </div>
-
+            
             <div class="employers-pagination">
                 <div class="pagination-dots" id="employers-pagination-dots">
                     <!-- Pagination dots will be generated here -->
                 </div>
             </div>
         </section>
-
+        
         <!-- CV CTA Section -->
         <section class="cv-cta-section">
             <div class="cv-cta-inner">
@@ -143,19 +148,7 @@
         </div>
     </div>
 
-    {{-- Load Vite assets with error handling --}}
     @vite(['resources/js/app.js'])
-    <script>
-        // Fallback: If Vite assets fail to load, it's not critical for home page
-        // as all necessary JS is already loaded inline or via asset() helper
-        window.addEventListener('error', function(e) {
-            if (e.target && e.target.tagName === 'SCRIPT' && e.target.src && e.target.src.includes('/build/assets/')) {
-                // Silently ignore Vite asset loading errors - not critical for home page
-                e.preventDefault();
-                console.warn('Vite asset load failed (non-critical):', e.target.src);
-            }
-        }, true);
-    </script>
 
     <script>
         // Helper to update notification badge from JS (call updateNotificationCount(n))
@@ -175,11 +168,85 @@
         //     } catch (e) { console.error(e); }
         // }, 30000);
     </script>
-
+    
 
     <script>
         // API Base URL
         const API_BASE_URL = '{{ url("/api") }}';
+
+        // Load job categories for "Việc làm theo ngành nghề"
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchCategories();
+        });
+
+        function fetchCategories() {
+            // Use the public API route (routes/api.php registers categories under prefix 'public')
+            const url = '{{ url("/api/public/categories") }}';
+            console.log('Fetching categories from', url);
+
+            fetch(url, { credentials: 'same-origin' })
+                .then(async res => {
+                    const text = await res.text();
+                    let json;
+                    try {
+                        json = JSON.parse(text);
+                    } catch (err) {
+                        console.error('Failed to parse categories JSON:', err, text);
+                        throw new Error('Invalid JSON response from categories API');
+                    }
+
+                    if (!res.ok) {
+                        console.error('Categories API responded with status', res.status, json);
+                        throw new Error(json.message || `HTTP ${res.status}`);
+                    }
+
+                    return json;
+                })
+                .then(json => {
+                    const data = json.data || json;
+                    if (Array.isArray(data)) {
+                        renderCategories(data);
+                    } else {
+                        console.warn('Categories response is not an array, data:', data);
+                        document.getElementById('categories-grid').innerHTML = '<div style="padding:16px">Không có ngành nghề để hiển thị.</div>';
+                    }
+                })
+                .catch(err => {
+                    console.error('Error fetching categories:', err);
+                    const grid = document.getElementById('categories-grid');
+                    if (grid) {
+                        grid.innerHTML = `<div style="padding:16px;color:#e53e3e">Không thể tải danh sách ngành nghề: ${escapeHtml(err.message || err)}</div>`;
+                    }
+                });
+        }
+
+        function renderCategories(categories) {
+            const grid = document.getElementById('categories-grid');
+            if (!grid) return;
+            if (!categories || !categories.length) {
+                grid.innerHTML = '<div style="padding:16px">Chưa có ngành nghề nào.</div>';
+                return;
+            }
+            // Render a green circular badge containing the category name (wrapped)
+            grid.innerHTML = categories.map(cat => {
+                const name = cat.name || cat.title || 'Không tên';
+                const jobsCount = (cat.jobs_count !== undefined) ? cat.jobs_count : (cat.jobs ? cat.jobs.length : 0);
+                const href = `/category/${encodeURIComponent(name)}`;
+                // Put the name inside the green circle; CSS will wrap and center the text
+                const badge = `<div class="category-badge">${escapeHtml(name)}</div>`;
+                return `
+                <a href="${href}" class="category-card">
+                    <div class="category-logo-wrap">${badge}</div>
+                    <div class="category-name">${escapeHtml(name)}</div>
+                    <div class="category-jobs">${jobsCount} việc làm</div>
+                </a>
+            `;
+            }).join('');
+            // ensure grid uses horizontal scrolling layout
+            grid.classList.add('horizontal-scroll-ready');
+            // enable drag-to-scroll interaction
+            enableDragToScroll(grid);
+        }
 
         // Small helper to avoid injecting raw strings
         function escapeHtml(str) {
@@ -203,7 +270,7 @@
                 const raw = String(url || '').trim();
                 if (!raw.match(/^https?:\/\//i) && !raw.startsWith('data:')) {
                     // If it already starts with /storage, use it
-                    if (raw.startsWith('/storage/')) return window.location.origin + raw;
+                    if (raw.startsWith('/storage/') ) return window.location.origin + raw;
                     // If it starts with a leading slash (but not /storage), assume it's relative to site root
                     if (raw.startsWith('/')) return window.location.origin + raw;
                     // Typical Laravel store path 'company-logos/...' -> map to /storage/company-logos/...
@@ -243,9 +310,7 @@
             container.addEventListener('mouseup', () => {
                 isDown = false;
                 // small delay to allow click suppression
-                setTimeout(() => {
-                    moved = false;
-                }, 50);
+                setTimeout(() => { moved = false; }, 50);
                 container.classList.remove('dragging');
                 container.style.cursor = 'grab';
             });
@@ -265,9 +330,7 @@
                 moved = false;
                 startX = e.touches[0].pageX - container.offsetLeft;
                 scrollLeft = container.scrollLeft;
-            }, {
-                passive: true
-            });
+            }, { passive: true });
 
             container.addEventListener('touchmove', (e) => {
                 const x = e.touches[0].pageX - container.offsetLeft;
@@ -275,9 +338,7 @@
                 if (Math.abs(dx) > 5) moved = true;
                 const walk = dx * 1;
                 container.scrollLeft = scrollLeft - walk;
-            }, {
-                passive: true
-            });
+            }, { passive: true });
 
             // Suppress clicks that are actually drags (prevents navigation) -- only for card clicks
             container.addEventListener('click', (e) => {
@@ -298,45 +359,45 @@
                 this.currentTheme = this.detectTheme();
                 this.init();
             }
-
+            
             detectTheme() {
                 // Check if user has a saved preference
                 const savedTheme = localStorage.getItem('theme');
                 if (savedTheme) {
                     return savedTheme;
                 }
-
+                
                 // Auto-detect based on system preference
                 if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
                     return 'dark';
                 }
-
+                
                 // Default to light theme
                 return 'light';
             }
-
+            
             init() {
                 this.applyTheme(this.currentTheme);
                 this.setupThemeToggle();
                 this.setupSystemThemeListener();
             }
-
+            
             applyTheme(theme) {
                 document.documentElement.setAttribute('data-theme', theme);
                 this.currentTheme = theme;
                 localStorage.setItem('theme', theme);
-
+                
                 // Update any theme-dependent elements
                 this.updateDynamicElements();
             }
-
+            
             updateDynamicElements() {
                 // Update any elements that need special handling
                 const sections = document.querySelectorAll('.best-jobs-section, .job-categories-section');
                 sections.forEach(section => {
                     const bgColor = getComputedStyle(section).backgroundColor;
                     const isLight = this.isLightColor(bgColor);
-
+                    
                     // Update text colors based on background
                     const textElements = section.querySelectorAll('h1, h2, h3, h4, h5, h6, p, span');
                     textElements.forEach(element => {
@@ -348,21 +409,21 @@
                     });
                 });
             }
-
+            
             isLightColor(color) {
                 // Convert RGB to lightness
                 const rgb = color.match(/\d+/g);
                 if (!rgb) return true;
-
+                
                 const r = parseInt(rgb[0]);
                 const g = parseInt(rgb[1]);
                 const b = parseInt(rgb[2]);
-
+                
                 // Calculate relative luminance
                 const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
                 return luminance > 0.5;
             }
-
+            
             setupThemeToggle() {
                 // Create theme toggle button if it doesn't exist
                 if (!document.getElementById('theme-toggle')) {
@@ -385,16 +446,16 @@
                         box-shadow: 0 4px 12px rgba(0,0,0,0.15);
                         transition: all 0.3s ease;
                     `;
-
+                    
                     toggle.addEventListener('click', () => {
                         this.toggleTheme();
                     });
-
-                    // NOTE: do not append the floating theme toggle to avoid layout overlap
-                    // document.body.appendChild(toggle);
+                    
+                            // NOTE: do not append the floating theme toggle to avoid layout overlap
+                            // document.body.appendChild(toggle);
                 }
             }
-
+            
             setupSystemThemeListener() {
                 // Listen for system theme changes
                 if (window.matchMedia) {
@@ -405,11 +466,11 @@
                     });
                 }
             }
-
+            
             toggleTheme() {
                 const newTheme = this.currentTheme === 'dark' ? 'light' : 'dark';
                 this.applyTheme(newTheme);
-
+                
                 // Update toggle button
                 const toggle = document.getElementById('theme-toggle');
                 if (toggle) {
@@ -417,14 +478,14 @@
                 }
             }
         }
-
+        
         // Initialize theme manager when page loads
         document.addEventListener('DOMContentLoaded', function() {
             new ThemeManager();
         });
-
+        
         let employerMap = {};
-        let employerLogoMap = {}; // companyId -> logoUrl
+    let employerLogoMap = {}; // companyId -> logoUrl
 
         // Debug function to check localStorage
         function debugLocalStorage() {
@@ -438,10 +499,10 @@
         // Load jobs on page load
         document.addEventListener('DOMContentLoaded', async function() {
             console.log('🚀 DOM loaded, starting optimized loading...');
-
+            
             // Load header first (with user info if logged in)
             checkLoginStatus();
-
+            
             // Load data sections in parallel
             await Promise.all([
                 loadEmployers(),
@@ -450,17 +511,17 @@
                 loadJobCategories(),
                 loadBannerCarousel()
             ]);
-
+            
             // Update UI elements
             updateCurrentDate();
             updateJobStats();
-
+            
             // Force refresh avatar after everything is loaded
             setTimeout(() => {
                 console.log('🔄 Final avatar refresh after page load');
                 window.updateHeaderAvatar();
-            }, 1000);
-
+            }, 1000); 
+            
             // Event delegation for job hover
             const jobsList = document.getElementById("jobs-list");
             const popup = document.getElementById("job-detail-popup");
@@ -529,14 +590,8 @@
                 const json = await res.json();
                 const list = (json && json.data) ? json.data : json;
                 if (!Array.isArray(list)) return;
-                employerMap = list.reduce((acc, c) => {
-                    acc[c.id] = c.company_name || c.companyName || '';
-                    return acc;
-                }, {});
-                employerLogoMap = list.reduce((acc, c) => {
-                    acc[c.id] = c.logo || c.avatar || c.logo_url || null;
-                    return acc;
-                }, {});
+                employerMap = list.reduce((acc, c) => { acc[c.id] = c.company_name || c.companyName || ''; return acc; }, {});
+                employerLogoMap = list.reduce((acc, c) => { acc[c.id] = c.logo || c.avatar || c.logo_url || null; return acc; }, {});
             } catch (e) {
                 console.error('Error loading employers (companies):', e);
             }
@@ -551,11 +606,11 @@
             try {
                 console.log('Loading top employers...');
                 console.log('API_BASE_URL:', API_BASE_URL);
-
+                
                 // Thử nhiều cách gọi API
                 let apiUrl = `${API_BASE_URL}/public/companies?per_page=12`;
                 console.log('API URL:', apiUrl);
-
+                
                 // Thử với route name nếu có
                 try {
                     const routeUrl = '{{ url("/api/public/companies") }}';
@@ -564,61 +619,59 @@
                 } catch (e) {
                     console.log('Route URL not available, using default');
                 }
-
+                
                 console.log('Final API URL being called:', apiUrl);
                 const response = await fetch(apiUrl);
                 console.log('Response status:', response.status);
                 console.log('Response ok:', response.ok);
                 console.log('Response headers:', response.headers);
-
+                
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-
+                
                 const companies = await response.json();
                 console.log('Companies response:', companies);
-
+                
                 // Handle both paginated and non-paginated responses
                 const companiesList = companies.data || companies;
-
+                
                 if (!companiesList || companiesList.length === 0) {
                     throw new Error('No companies found');
                 }
-
+                
                 // Get job counts for each company
                 const companiesWithJobCounts = await Promise.all(
                     companiesList.map(async (company) => {
                         try {
                             const jobsResponse = await fetch(`${API_BASE_URL}/public/companies/${company.id}/jobs`);
                             const jobsData = await jobsResponse.json();
-                            console.log(`Jobs data for company ${company.id}:`, jobsData);
-                            const jobCount = jobsData.jobs ? jobsData.jobs.length : (jobsData.total || 0);
                             return {
                                 ...company,
-                                jobCount: jobCount
+                                jobCount: jobsData.jobs ? jobsData.jobs.length : 0
                             };
                         } catch (error) {
                             console.log(`Error loading jobs for company ${company.id}:`, error);
                             return {
                                 ...company,
-                                jobCount: 0
+                                jobCount: Math.floor(Math.random() * 10) + 1 // Fallback random count
                             };
                         }
                     })
                 );
-
+                
                 // Sort by job count and take top companies
                 topEmployersData = companiesWithJobCounts
                     .sort((a, b) => b.jobCount - a.jobCount)
                     .slice(0, 12);
-
+                
                 console.log('Top employers data:', topEmployersData);
                 displayTopEmployers();
                 initEmployersSwipe();
             } catch (error) {
                 console.error('Error loading top employers:', error);
                 console.log('Falling back to sample data...');
-
+                
                 // Thử gọi API trực tiếp từ database thông qua Laravel
                 try {
                     // Gọi API trực tiếp từ Laravel route
@@ -634,7 +687,7 @@
                 } catch (directError) {
                     console.log('Direct API also failed:', directError);
                 }
-
+                
                 // Thử với jQuery AJAX nếu có
                 if (typeof $ !== 'undefined') {
                     try {
@@ -653,7 +706,7 @@
                         console.log('jQuery AJAX also failed:', ajaxError);
                     }
                 }
-
+                
                 // Nếu tất cả đều thất bại, hiển thị thông báo lỗi chi tiết
                 const grid = document.getElementById('employers-grid');
                 grid.innerHTML = `
@@ -672,17 +725,17 @@
         // Display top employers with pagination
         function displayTopEmployers() {
             const grid = document.getElementById('employers-grid');
-
+            
             console.log('Displaying top employers:', topEmployersData);
-
+            
             if (!topEmployersData || topEmployersData.length === 0) {
                 grid.innerHTML = '<div style="text-align: center; padding: 40px; color: #6c757d;">Đang tải dữ liệu...</div>';
                 return;
             }
-
+            
             // Calculate total pages
             const totalPages = Math.ceil(topEmployersData.length / employersPerPage);
-
+            
             // Create pagination container if it doesn't exist
             let paginationContainer = document.querySelector('.employers-pagination');
             if (!paginationContainer) {
@@ -690,12 +743,12 @@
                 paginationContainer.className = 'employers-pagination';
                 grid.parentNode.appendChild(paginationContainer);
             }
-
+            
             // Clear and populate grid with current page
             updateEmployersPage();
             updateEmployersPaginationDots();
         }
-
+        
         // Update employers page
         function updateEmployersPage() {
             const grid = document.getElementById('employers-grid');
@@ -703,10 +756,10 @@
             const currentPageData = topEmployersData.slice(0, Math.max(topEmployersData.length, employersPerPage));
 
             grid.innerHTML = currentPageData.map((company) => {
-                const logoUrl = (company.logo && company.logo !== 'null' && company.logo !== 'undefined') ? company.logo : '{{ asset("images/company-placeholder.svg") }}';
+                const logoUrl = company.logo ? company.logo : '{{ asset("images/company-placeholder.svg") }}';
 
                 return `
-                    <div class="employer-card" data-company-id="${company.id}">
+                    <div class="employer-card" onclick="viewCompanyDetail(${company.id})">
                         <div class="employer-logo-section" style="background-image: url('${logoUrl}'); background-size: cover; background-position: center; background-repeat: no-repeat;">
                         </div>
                         <div class="employer-logo">
@@ -721,9 +774,9 @@
                             <div class="employer-stats">
                                 <span class="job-count">
                                     <i class="fas fa-briefcase"></i>
-                                    ${company.jobCount || 0} việc đang tuyển
+                                    ${company.jobCount} việc đang tuyển
                                 </span>
-                                <span class="employer-location" title="${company.address || 'Địa điểm không xác định'}">
+                                <span class="employer-location">
                                     <i class="fas fa-map-marker-alt"></i>
                                     ${company.address || 'Địa điểm không xác định'}
                                 </span>
@@ -748,9 +801,7 @@
                     btn.classList.add('pressed');
                     setTimeout(() => btn.classList.remove('pressed'), 260);
                 }
-            } catch (e) {
-                /* ignore if event not available */
-            }
+            } catch (e) { /* ignore if event not available */ }
 
             // If grid is horizontal scrollable, scroll by one card width using smoothScrollTo for better easing
             if (grid && grid.classList.contains('horizontal-scroll-ready')) {
@@ -795,7 +846,7 @@
             let velocity = 0;
             let lastX = 0;
             let lastTime = 0;
-
+            
             // Mouse events
             grid.addEventListener('mousedown', (e) => {
                 isDragging = true;
@@ -805,12 +856,12 @@
                 grid.style.userSelect = 'none';
                 lastX = e.pageX;
                 lastTime = performance.now();
-
+                
                 if (animationId) {
                     cancelAnimationFrame(animationId);
                 }
             });
-
+            
             grid.addEventListener('mouseleave', () => {
                 if (isDragging) {
                     isDragging = false;
@@ -819,7 +870,7 @@
                     applyMomentum();
                 }
             });
-
+            
             grid.addEventListener('mouseup', () => {
                 if (isDragging) {
                     isDragging = false;
@@ -828,19 +879,19 @@
                     applyMomentum();
                 }
             });
-
+            
             grid.addEventListener('mousemove', (e) => {
                 if (isDragging && e.buttons === 1) {
                     e.preventDefault();
-
+                    
                     if (animationId) {
                         cancelAnimationFrame(animationId);
                     }
-
+                    
                     const x = e.pageX - grid.offsetLeft;
                     const walk = (x - startX) * 1.0;
                     grid.scrollLeft = scrollLeft - walk;
-
+                    
                     const currentTime = performance.now();
                     const deltaTime = currentTime - lastTime;
                     if (deltaTime > 0) {
@@ -850,7 +901,7 @@
                     }
                 }
             });
-
+            
             // Touch events for mobile
             grid.addEventListener('touchstart', (e) => {
                 isDragging = true;
@@ -858,24 +909,24 @@
                 scrollLeft = grid.scrollLeft;
                 lastX = e.touches[0].pageX;
                 lastTime = performance.now();
-
+                
                 if (animationId) {
                     cancelAnimationFrame(animationId);
                 }
             });
-
+            
             grid.addEventListener('touchmove', (e) => {
                 if (isDragging) {
                     e.preventDefault();
-
+                    
                     if (animationId) {
                         cancelAnimationFrame(animationId);
                     }
-
+                    
                     const x = e.touches[0].pageX - grid.offsetLeft;
                     const walk = (x - startX) * 1.0;
                     grid.scrollLeft = scrollLeft - walk;
-
+                    
                     const currentTime = performance.now();
                     const deltaTime = currentTime - lastTime;
                     if (deltaTime > 0) {
@@ -885,14 +936,14 @@
                     }
                 }
             });
-
+            
             grid.addEventListener('touchend', () => {
                 if (isDragging) {
                     isDragging = false;
                     applyMomentum();
                 }
             });
-
+            
             function applyMomentum() {
                 if (Math.abs(velocity) > 0.1) {
                     const momentum = velocity * 400;
@@ -906,12 +957,10 @@
         function updateEmployersPaginationDots() {
             const paginationContainer = document.querySelector('.employers-pagination');
             if (!paginationContainer) return;
-
+            
             const totalPages = Math.ceil(topEmployersData.length / employersPerPage);
-
-            paginationContainer.innerHTML = Array.from({
-                    length: totalPages
-                }, (_, i) =>
+            
+            paginationContainer.innerHTML = Array.from({ length: totalPages }, (_, i) => 
                 `<button class="pagination-dot ${i === currentEmployerPage ? 'active' : ''}" 
                      onclick="goToEmployerPage(${i})"></button>`
             ).join('');
@@ -963,11 +1012,7 @@
                 }
 
                 let json = null;
-                try {
-                    json = JSON.parse(text);
-                } catch (e) {
-                    console.error('Invalid JSON from /api/jobs', e);
-                }
+                try { json = JSON.parse(text); } catch (e) { console.error('Invalid JSON from /api/jobs', e); }
                 const list = (json && json.data) ? json.data : json;
                 jobs = Array.isArray(list) ? list : [];
                 console.log('Parsed jobs count:', jobs.length);
@@ -986,26 +1031,12 @@
         async function preloadFavoriteIds() {
             try {
                 const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
-                const authToken = localStorage.getItem('authToken');
                 favoriteJobIdSet.clear();
-
-                // Only proceed if user is logged in, has valid token, and is a candidate
-                if (!currentUser || !authToken || currentUser.role !== 'candidate') {
-                    return;
-                }
-
+                if (!currentUser) return;
                 const resp = await window.APIHelper.request('/saved-jobs');
                 const list = resp?.data || [];
                 list.forEach(f => favoriteJobIdSet.add(Number(f.job_id || f.jobId || (f.job && f.job.id))));
-            } catch (e) {
-                // Silently handle 403/401 - user not authenticated, not authorized, or wrong role
-                if (e.status === 403 || e.status === 401) {
-                    // User not logged in, token expired, or not a candidate - this is expected
-                    return;
-                }
-                // Only log other errors
-                console.warn('Failed to preload favorites', e);
-            }
+            } catch (e) { console.warn('Failed to preload favorites', e); }
         }
 
         // Preload applied job ids so we can show 'Ứng tuyển lại' where appropriate
@@ -1013,51 +1044,20 @@
         async function preloadAppliedJobIds() {
             try {
                 const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
-                const authToken = localStorage.getItem('authToken');
                 appliedJobIdSet.clear();
-
-                // Only proceed if user is logged in, has valid token, and is a candidate
-                if (!currentUser || !authToken || currentUser.role !== 'candidate') {
-                    return;
-                }
+                if (!currentUser) return;
 
                 // Prefer APIHelper when available
                 let appsResp = null;
                 if (typeof window.APIHelper !== 'undefined' && typeof window.APIHelper.request === 'function') {
-                    try {
-                        appsResp = await window.APIHelper.request('/applications');
-                    } catch (e) {
-                        // Silently handle 403/401 - user not authenticated or not authorized
-                        if (e.status === 403 || e.status === 401) {
-                            return;
-                        }
-                        appsResp = null;
-                    }
+                    try { appsResp = await window.APIHelper.request('/applications'); } catch(e) { appsResp = null; }
                 }
                 if (!appsResp) {
                     try {
-                        const resp = await fetch(`${API_BASE_URL}/applications`, {
-                            credentials: 'include',
-                            headers: {
-                                'Authorization': `Bearer ${authToken}`,
-                                'Accept': 'application/json'
-                            }
-                        });
-                        if (!resp.ok) {
-                            // Silently handle 403/401
-                            if (resp.status === 403 || resp.status === 401) {
-                                return;
-                            }
-                            throw new Error('applications fetch failed');
-                        }
+                        const resp = await fetch(`${API_BASE_URL}/applications`, { credentials: 'include' });
+                        if (!resp.ok) throw new Error('applications fetch failed');
                         appsResp = await resp.json().catch(() => null);
-                    } catch (e) {
-                        // Silently handle 403/401
-                        if (e.status === 403 || e.status === 401) {
-                            return;
-                        }
-                        appsResp = null;
-                    }
+                    } catch (e) { appsResp = null; }
                 }
 
                 const apps = (appsResp && appsResp.data) ? appsResp.data : (appsResp || []);
@@ -1066,10 +1066,6 @@
                     if (jid) appliedJobIdSet.add(jid);
                 });
             } catch (e) {
-                // Silently handle 403/401 - user not authenticated or not authorized
-                if (e.status === 403 || e.status === 401) {
-                    return;
-                }
                 console.warn('Failed to preload applied job ids', e);
                 appliedJobIdSet = new Set();
             }
@@ -1082,9 +1078,7 @@
                     return `<button class="btn-apply" onclick="window.location.href='${base}/'+${jobId}"><i class=\"fas fa-sync-alt fa-spin\" style=\"margin-right:8px\"></i>Ứng tuyển lại</button>`;
                 }
                 return `<button class="btn-apply" onclick="window.location.href='${base}/'+${jobId}">Ứng tuyển ngay</button>`;
-            } catch (e) {
-                return `<button class="btn-apply" onclick="window.location.href='{{ url("jobs") }}/'+${jobId}">Ứng tuyển ngay</button>`;
-            }
+            } catch (e) { return `<button class="btn-apply" onclick="window.location.href='{{ url("jobs") }}/'+${jobId}">Ứng tuyển ngay</button>`; }
         }
 
         // Display jobs in the UI
@@ -1138,10 +1132,7 @@
                 <div class="job-actions" style="display:flex;align-items:center;justify-content:space-between;margin-top:10px">
                     <div class="job-salary">${escapeHtml(salaryText)}</div>
                     <div style="display:flex;align-items:center;gap:8px">
-                        <button class="btn-ai-analysis" data-job-id="${job.id}" onclick="handleAiAnalysisHome(${job.id}); event.stopPropagation();" title="Phân tích độ phù hợp với AI" style="background:#1fae4f;border:none;padding:8px 12px;border-radius:6px;display:flex;align-items:center;gap:6px;color:white;font-size:12px;font-weight:600;cursor:pointer;transition:background 0.3s" onmouseover="this.style.background='#16a34a'" onmouseout="this.style.background='#1fae4f'">
-                            <span>🤖</span>
-                            <span>AI</span>
-                        </button>
+                        <!-- Apply button removed from card; open details to apply -->
                         <button class="btn-save ${savedClass}" data-job-id="${job.id}" onclick="toggleFavorite(${job.id}, this)" title="Lưu việc làm">
                             <i class="${savedIcon} fa-heart"></i>
                         </button>
@@ -1156,7 +1147,7 @@
         function showJobPopup(jobId, jobElement) {
             console.log('showJobPopup called with jobId:', jobId); // Debug
             console.log('Available jobs:', jobs); // Debug
-
+            
             // Clear any existing timeout
             if (currentPopupTimeout) {
                 clearTimeout(currentPopupTimeout);
@@ -1172,7 +1163,7 @@
             }
 
             const popup = document.getElementById("job-detail-popup");
-
+            
             // Only update content if it's a different job
             if (currentJobId != jobId) {
                 currentJobId = jobId;
@@ -1226,20 +1217,20 @@
         function applyJob(jobId) {
             const isLoggedIn = localStorage.getItem('isLoggedIn');
             const currentUser = localStorage.getItem('currentUser');
-
+            
             if (isLoggedIn !== 'true' || !currentUser) {
                 alert('Vui lòng đăng nhập để ứng tuyển việc làm!');
                 window.location.href = '{{ route("login") }}?from=button';
                 return;
             }
-
+            
             const user = JSON.parse(currentUser);
-
+            
             if (user.role === 'employer') {
                 alert('Nhà tuyển dụng không thể ứng tuyển việc làm!');
                 return;
             }
-
+            
             // Here you would implement the actual application logic
             alert(`Ứng tuyển thành công cho việc làm ID: ${jobId}`);
         }
@@ -1274,16 +1265,12 @@
                         await updateFavoriteCount();
                         return;
                     }
-                } catch (ex) {
-                    /* ignore */
-                }
+                } catch (ex) { /* ignore */ }
 
                 await window.APIHelper.ensureCsrf();
                 await window.APIHelper.request('/saved-jobs', {
                     method: 'POST',
-                    body: JSON.stringify({
-                        job_id: jobId
-                    })
+                    body: JSON.stringify({ job_id: jobId })
                 });
 
                 // cập nhật UI nút trái tim trên card
@@ -1322,16 +1309,11 @@
                     if (!currentUser) return;
                     await window.APIHelper.ensureCsrf();
                     // backend destroy expects DELETE /saved-jobs/{jobId}
-                    await window.APIHelper.request(`/saved-jobs/${jobId}`, {
-                        method: 'DELETE'
-                    });
+                    await window.APIHelper.request(`/saved-jobs/${jobId}`, { method: 'DELETE' });
 
                     el.classList.remove('active');
                     const icon = el.querySelector('i');
-                    if (icon) {
-                        icon.classList.remove('fas');
-                        icon.classList.add('far');
-                    }
+                    if (icon) { icon.classList.remove('fas'); icon.classList.add('far'); }
                     await updateFavoriteCount();
                     localStorage.setItem('favorite:updated', String(Date.now()));
                 } catch (e) {
@@ -1361,16 +1343,7 @@
         // Lấy và cập nhật số lượng yêu thích ở góc
         async function updateFavoriteCount() {
             const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
-            const authToken = localStorage.getItem('authToken');
-
-            // Only proceed if user is logged in, has valid token, and is a candidate
-            if (!currentUser || !authToken || currentUser.role !== 'candidate') {
-                const countEl = document.querySelector('#favorite-btn .fab-count');
-                if (countEl) {
-                    countEl.textContent = '0';
-                }
-                return;
-            }
+            if (!currentUser) return;
 
             try {
                 const resp = await window.APIHelper.request('/saved-jobs');
@@ -1380,16 +1353,7 @@
                     countEl.textContent = list.length;
                 }
             } catch (e) {
-                // Silently handle 403/401 - user not authenticated or not authorized
-                if (e.status === 403 || e.status === 401) {
-                    const countEl = document.querySelector('#favorite-btn .fab-count');
-                    if (countEl) {
-                        countEl.textContent = '0';
-                    }
-                    return;
-                }
-                // Only log other errors
-                console.warn('Error updating favorite count:', e);
+                console.error('Error updating favorite count:', e);
             }
         }
 
@@ -1416,9 +1380,7 @@
                     const m = String(value).match(/(\d{4}-\d{2}-\d{2})/);
                     if (m) d = new Date(m[1] + 'T00:00:00');
                 }
-            } catch (e) {
-                return ''
-            }
+            } catch (e) { return '' }
             if (!d || isNaN(d.getTime())) return '';
             const dd = String(d.getDate()).padStart(2, '0');
             const mm = String(d.getMonth() + 1).padStart(2, '0');
@@ -1479,7 +1441,7 @@
                 document.querySelectorAll('.filter-tag').forEach(t => t.classList.remove('active'));
                 // Add active class to clicked tag
                 this.classList.add('active');
-
+                
                 const location = this.dataset.location;
                 if (location) {
                     searchJobs('', location);
@@ -1517,18 +1479,15 @@
         // Slider promo-banner
         let promoIndex = 0;
         const promoSlides = document.querySelectorAll('.promo-slide');
-
         function showPromoSlide(idx) {
-            promoSlides.forEach((slide, i) => {
-                slide.classList.toggle('active', i === idx);
-            });
+        promoSlides.forEach((slide, i) => {
+        slide.classList.toggle('active', i === idx);
+        });
         }
-
         function nextPromoSlide() {
             promoIndex = (promoIndex + 1) % promoSlides.length;
             showPromoSlide(promoIndex);
         }
-
         function prevPromoSlide() {
             promoIndex = (promoIndex - 1 + promoSlides.length) % promoSlides.length;
             showPromoSlide(promoIndex);
@@ -1536,12 +1495,12 @@
         if (promoSlides.length) {
             setInterval(nextPromoSlide, 4000);
         }
-
+        
         // Job Categories functionality
         let categoriesData = [];
         let currentCategoryPage = 0;
         const categoriesPerPage = 6;
-
+        
         // Category icons mapping
         const categoryIcons = {
             'Công nghệ Thông tin': 'fas fa-laptop-code',
@@ -1557,61 +1516,36 @@
             'Ngân hàng': 'fas fa-university',
             'Thư ký/Hành chính': 'fas fa-clipboard-list'
         };
-
+        
         // Load job categories
         async function loadJobCategories() {
             try {
                 const response = await fetch(`${API_BASE_URL}/public/jobs`);
-                const data = await response.json();
-
-                // Handle both array and {data: array} formats
-                const jobs = Array.isArray(data) ? data : (data.data || []);
-
-                // Count unique jobs by category (avoid counting same job multiple times)
-                const categoryJobIds = {};
-                jobs.forEach(job => {
-                    // job.categories is an array of category objects
-                    if (job.categories && job.categories.length > 0) {
-                        // Only count the first category to avoid duplicates
-                        const firstCategory = job.categories[0];
-                        const categoryName = firstCategory.name || 'Khác';
-                        if (!categoryJobIds[categoryName]) {
-                            categoryJobIds[categoryName] = new Set();
-                        }
-                        categoryJobIds[categoryName].add(job.id);
-                    } else {
-                        if (!categoryJobIds['Khác']) {
-                            categoryJobIds['Khác'] = new Set();
-                        }
-                        categoryJobIds['Khác'].add(job.id);
-                    }
-                });
-
-                // Convert Sets to counts
+                const jobs = await response.json();
+                
+                // Count jobs by category
                 const categoryCounts = {};
-                Object.entries(categoryJobIds).forEach(([name, jobIds]) => {
-                    categoryCounts[name] = jobIds.size;
+                jobs.forEach(job => {
+                    const category = job.category || 'Khác';
+                    categoryCounts[category] = (categoryCounts[category] || 0) + 1;
                 });
-
+                
                 // Convert to array and sort by count
                 categoriesData = Object.entries(categoryCounts)
-                    .map(([name, count]) => ({
-                        name,
-                        count
-                    }))
+                    .map(([name, count]) => ({ name, count }))
                     .sort((a, b) => b.count - a.count);
-
+                
                 displayCategories();
                 initCategoriesSwipe();
             } catch (error) {
                 console.error('Error loading categories:', error);
             }
         }
-
+        
         // Display categories
         function displayCategories() {
             const grid = document.getElementById('categories-grid');
-
+            
             grid.innerHTML = categoriesData.map(category => {
                 const icon = categoryIcons[category.name] || 'fas fa-briefcase';
                 // use data-category attribute and avoid inline onclick so we can detect drag vs click
@@ -1631,30 +1565,20 @@
             setTimeout(() => {
                 const cards = grid.querySelectorAll('.category-card');
                 cards.forEach(card => {
-                    let startX = 0,
-                        startY = 0,
-                        isDragging = false;
+                    let startX = 0, startY = 0, isDragging = false;
                     card.addEventListener('pointerdown', (ev) => {
                         startX = ev.clientX || 0;
                         startY = ev.clientY || 0;
                         isDragging = false;
-                        try {
-                            card.setPointerCapture(ev.pointerId);
-                        } catch (e) {}
-                    }, {
-                        passive: true
-                    });
+                        try { card.setPointerCapture(ev.pointerId); } catch(e) {}
+                    }, { passive: true });
                     card.addEventListener('pointermove', (ev) => {
                         const dx = (ev.clientX || 0) - startX;
                         const dy = (ev.clientY || 0) - startY;
                         if (Math.hypot(dx, dy) > 8) isDragging = true;
-                    }, {
-                        passive: true
-                    });
+                    }, { passive: true });
                     card.addEventListener('pointerup', (ev) => {
-                        try {
-                            card.releasePointerCapture(ev.pointerId);
-                        } catch (e) {}
+                        try { card.releasePointerCapture(ev.pointerId); } catch(e) {}
                         if (!isDragging) {
                             const cat = card.dataset.category;
                             if (cat) filterByCategory(cat);
@@ -1666,17 +1590,17 @@
                     });
                 });
             }, 0);
-
+            
             updatePaginationDots();
         }
-
+        
         // Scroll categories with smooth animation
         function scrollCategories(direction) {
             const grid = document.getElementById('categories-grid');
             const cardWidth = 220; // Width of one card + gap
             const currentScroll = grid.scrollLeft;
             const maxScroll = grid.scrollWidth - grid.clientWidth;
-
+            
             let targetScroll;
             try {
                 const btn = event && event.currentTarget ? event.currentTarget : null;
@@ -1695,32 +1619,32 @@
             // Smooth scroll with easing
             smoothScrollTo(grid, targetScroll, 300);
         }
-
+        
         // Ultra smooth scroll function with advanced easing
         function smoothScrollTo(element, target, duration) {
             const start = element.scrollLeft;
             const change = target - start;
             const startTime = performance.now();
-
+            
             function animateScroll(currentTime) {
                 const elapsed = currentTime - startTime;
                 const progress = Math.min(elapsed / duration, 1);
-
+                
                 // Advanced easing function (ease-out-cubic with bounce)
                 const easeOutCubic = 1 - Math.pow(1 - progress, 3);
                 const bounce = Math.sin(progress * Math.PI) * 0.1;
                 const finalEase = easeOutCubic + (bounce * (1 - progress));
-
+                
                 element.scrollLeft = start + (change * finalEase);
-
+                
                 if (progress < 1) {
                     requestAnimationFrame(animateScroll);
                 }
             }
-
+            
             requestAnimationFrame(animateScroll);
         }
-
+        
         // Ultra smooth drag with requestAnimationFrame
         function initCategoriesSwipe() {
             const grid = document.getElementById('categories-grid');
@@ -1731,7 +1655,7 @@
             let lastX = 0;
             let lastTime = 0;
             let animationId = null;
-
+            
             // Mouse events
             grid.addEventListener('mousedown', (e) => {
                 isDragging = true;
@@ -1741,13 +1665,13 @@
                 grid.style.userSelect = 'none';
                 lastX = e.pageX;
                 lastTime = performance.now();
-
+                
                 // Cancel any ongoing animation
                 if (animationId) {
                     cancelAnimationFrame(animationId);
                 }
             });
-
+            
             grid.addEventListener('mouseleave', () => {
                 if (isDragging) {
                     isDragging = false;
@@ -1756,7 +1680,7 @@
                     applyMomentum();
                 }
             });
-
+            
             grid.addEventListener('mouseup', () => {
                 if (isDragging) {
                     isDragging = false;
@@ -1765,21 +1689,21 @@
                     applyMomentum();
                 }
             });
-
+            
             grid.addEventListener('mousemove', (e) => {
                 if (isDragging && e.buttons === 1) {
                     e.preventDefault();
-
+                    
                     // Cancel previous animation
                     if (animationId) {
                         cancelAnimationFrame(animationId);
                     }
-
+                    
                     // Direct scroll without interpolation for immediate response
                     const x = e.pageX - grid.offsetLeft;
                     const walk = (x - startX) * 1.0; // Direct 1:1 mapping
                     grid.scrollLeft = scrollLeft - walk;
-
+                    
                     // Calculate velocity for momentum
                     const currentTime = performance.now();
                     const deltaTime = currentTime - lastTime;
@@ -1790,7 +1714,7 @@
                     }
                 }
             });
-
+            
             // Touch events for mobile
             grid.addEventListener('touchstart', (e) => {
                 isDragging = true;
@@ -1798,27 +1722,27 @@
                 scrollLeft = grid.scrollLeft;
                 lastX = e.touches[0].pageX;
                 lastTime = performance.now();
-
+                
                 // Cancel any ongoing animation
                 if (animationId) {
                     cancelAnimationFrame(animationId);
                 }
             });
-
+            
             grid.addEventListener('touchmove', (e) => {
                 if (isDragging) {
                     e.preventDefault();
-
+                    
                     // Cancel previous animation
                     if (animationId) {
                         cancelAnimationFrame(animationId);
                     }
-
+                    
                     // Direct scroll without interpolation for immediate response
                     const x = e.touches[0].pageX - grid.offsetLeft;
                     const walk = (x - startX) * 1.0; // Direct 1:1 mapping
                     grid.scrollLeft = scrollLeft - walk;
-
+                    
                     // Calculate velocity
                     const currentTime = performance.now();
                     const deltaTime = currentTime - lastTime;
@@ -1829,59 +1753,58 @@
                     }
                 }
             });
-
+            
             grid.addEventListener('touchend', () => {
                 if (isDragging) {
                     isDragging = false;
                     applyMomentum();
                 }
             });
-
+            
             // Apply momentum scrolling with smooth animation
             function applyMomentum() {
                 if (Math.abs(velocity) > 0.1) {
                     const momentum = velocity * 400; // Increased momentum
                     const targetScroll = Math.max(0, Math.min(grid.scrollWidth - grid.clientWidth, grid.scrollLeft - momentum));
-
+                    
                     // Use smooth scroll for momentum
                     smoothScrollTo(grid, targetScroll, 600);
                 }
             }
         }
-
+        
         // Update pagination dots
         function updatePaginationDots() {
             const dotsContainer = document.getElementById('pagination-dots');
             const totalPages = Math.ceil(categoriesData.length / categoriesPerPage);
-
-            dotsContainer.innerHTML = Array.from({
-                    length: totalPages
-                }, (_, i) =>
+            
+            dotsContainer.innerHTML = Array.from({ length: totalPages }, (_, i) => 
                 `<div class="pagination-dot ${i === currentCategoryPage ? 'active' : ''}" 
                      onclick="goToCategoryPage(${i})"></div>`
             ).join('');
         }
-
+        
         // Go to specific category page
         function goToCategoryPage(page) {
             currentCategoryPage = page;
             displayCategories();
         }
-
+        
         // Show all categories
         function showAllCategories() {
             window.location.href = '{{ route("job-categories") }}';
         }
-
+        
         // Go to category jobs page
         function filterByCategory(categoryName) {
             // Single encode to handle special characters properly
             const encodedCategory = encodeURIComponent(categoryName);
             window.location.href = `{{ url('/category') }}/${encodedCategory}`;
         }
-
+        
         // Banner carousel data
-        const bannerData = [{
+        const bannerData = [
+            {
                 id: 1,
                 title: "Tìm việc làm mơ ước",
                 subtitle: "Hàng nghìn cơ hội việc làm hấp dẫn đang chờ bạn",
@@ -1917,15 +1840,15 @@
 
         let currentBannerIndex = 0;
         let bannerInterval;
-        let canTrigger = true; // global debounce flag for slide triggering
+    let canTrigger = true; // global debounce flag for slide triggering
 
         // Load banner carousel
         function loadBannerCarousel() {
             const bannerContainer = document.getElementById('banner-carousel');
             const paginationContainer = document.getElementById('banner-pagination');
-
+            
             console.log('Loading banner carousel with data:', bannerData);
-
+            
             // Create banner slides
             bannerContainer.innerHTML = bannerData.map((banner, index) => {
                 console.log(`Creating slide ${index} with image:`, banner.image);
@@ -1956,7 +1879,7 @@
                 console.log(`Slide ${index}:`, slide);
                 console.log(`Slide ${index} background:`, slide.style.background);
             });
-
+            
             // Test image loading
             bannerData.forEach((banner, index) => {
                 const img = new Image();
@@ -1964,14 +1887,14 @@
                 img.onerror = () => console.error(`Image ${index} (${banner.image}) failed to load`);
                 img.src = banner.image;
             });
-
+            
             // Test: Force show all slides for debugging
             setTimeout(() => {
                 console.log('Testing all slides visibility...');
                 const bannerCarousel = document.getElementById('banner-carousel');
                 console.log('Banner carousel width:', bannerCarousel.offsetWidth);
                 console.log('Banner carousel scrollWidth:', bannerCarousel.scrollWidth);
-
+                
                 slides.forEach((slide, index) => {
                     const computedStyle = window.getComputedStyle(slide);
                     console.log(`Slide ${index}:`, {
@@ -1986,10 +1909,10 @@
                     });
                 });
             }, 1000);
-
+            
             // Initialize banner swipe
             initBannerSwipe();
-
+            
             // Start auto-play (single reliable interval). Debug/test transitions removed.
             startBannerAutoPlay();
         }
@@ -2040,9 +1963,7 @@
 
             current.addEventListener('transitionend', cleanup);
             // Safety fallback: if transitionend doesn't fire, re-enable after duration + small buffer
-            setTimeout(() => {
-                cleanup();
-            }, 800); // transition is 600ms, use 800ms as buffer
+            setTimeout(() => { cleanup(); }, 800); // transition is 600ms, use 800ms as buffer
 
             currentBannerIndex = nextIndex;
         }
@@ -2070,7 +1991,7 @@
             let lastX = 0;
             let lastTime = 0;
             let hoverTimeout = null;
-
+            
             // Hover-to-grab only (do not alter autoplay timing on hover).
             bannerCarousel.addEventListener('mouseenter', () => {
                 if (!isDragging) bannerCarousel.style.cursor = 'grab';
@@ -2080,7 +2001,7 @@
             bannerCarousel.addEventListener('mouseleave', () => {
                 bannerCarousel.style.cursor = 'default';
             });
-
+            
             // Mouse events
             bannerCarousel.addEventListener('mousedown', (e) => {
                 isDragging = true;
@@ -2089,7 +2010,7 @@
                 bannerCarousel.style.userSelect = 'none';
                 lastX = e.pageX;
                 lastTime = performance.now();
-
+                
                 // Stop auto-play when dragging. Hover auto-advance removed so no hover timeout to cancel.
                 stopBannerAutoPlay();
                 // As a safety, set a fallback to resume autoplay in case mouseup is missed
@@ -2099,7 +2020,7 @@
                     startBannerAutoPlay();
                 }, 5000); // resume after 5s if no mouseup/touchend detected
             });
-
+            
             bannerCarousel.addEventListener('mouseleave', () => {
                 if (isDragging) {
                     isDragging = false;
@@ -2108,25 +2029,22 @@
                     startBannerAutoPlay();
                 }
             });
-
+            
             bannerCarousel.addEventListener('mouseup', () => {
                 if (isDragging) {
                     isDragging = false;
                     bannerCarousel.style.cursor = 'grab';
                     bannerCarousel.style.userSelect = 'auto';
-                    if (window.__bannerResumeFallback) {
-                        clearTimeout(window.__bannerResumeFallback);
-                        window.__bannerResumeFallback = null;
-                    }
+                    if (window.__bannerResumeFallback) { clearTimeout(window.__bannerResumeFallback); window.__bannerResumeFallback = null; }
                     startBannerAutoPlay();
                 }
             });
-
+            
             bannerCarousel.addEventListener('mousemove', (e) => {
                 if (isDragging) {
                     e.preventDefault();
                     const deltaX = e.pageX - startX;
-
+                    
                     // Calculate velocity
                     const currentTime = performance.now();
                     const deltaTime = currentTime - lastTime;
@@ -2135,7 +2053,7 @@
                         lastX = e.pageX;
                         lastTime = currentTime;
                     }
-
+                    
                     // Change slide based on drag distance
                     if (Math.abs(deltaX) > 50 && canTrigger) {
                         canTrigger = false; // will be re-enabled after transition completes
@@ -2151,23 +2069,23 @@
                     }
                 }
             });
-
+            
             // Touch events
             bannerCarousel.addEventListener('touchstart', (e) => {
                 isDragging = true;
                 startX = e.touches[0].pageX;
                 lastX = e.touches[0].pageX;
                 lastTime = performance.now();
-
+                
                 // Stop auto-play when dragging
                 stopBannerAutoPlay();
             });
-
+            
             bannerCarousel.addEventListener('touchmove', (e) => {
                 if (isDragging) {
                     e.preventDefault();
                     const deltaX = e.touches[0].pageX - startX;
-
+                    
                     // Calculate velocity
                     const currentTime = performance.now();
                     const deltaTime = currentTime - lastTime;
@@ -2176,7 +2094,7 @@
                         lastX = e.touches[0].pageX;
                         lastTime = currentTime;
                     }
-
+                    
                     // Change slide based on drag distance
                     if (Math.abs(deltaX) > 50 && canTrigger) {
                         canTrigger = false; // re-enabled after transition
@@ -2192,14 +2110,11 @@
                     }
                 }
             });
-
+            
             bannerCarousel.addEventListener('touchend', () => {
                 if (isDragging) {
                     isDragging = false;
-                    if (window.__bannerResumeFallback) {
-                        clearTimeout(window.__bannerResumeFallback);
-                        window.__bannerResumeFallback = null;
-                    }
+                    if (window.__bannerResumeFallback) { clearTimeout(window.__bannerResumeFallback); window.__bannerResumeFallback = null; }
                     startBannerAutoPlay();
                 }
             });
@@ -2212,10 +2127,7 @@
                         bannerCarousel.style.cursor = 'default';
                         bannerCarousel.style.userSelect = 'auto';
                     }
-                    if (window.__bannerResumeFallback) {
-                        clearTimeout(window.__bannerResumeFallback);
-                        window.__bannerResumeFallback = null;
-                    }
+                    if (window.__bannerResumeFallback) { clearTimeout(window.__bannerResumeFallback); window.__bannerResumeFallback = null; }
                     startBannerAutoPlay();
                 }
             }
@@ -2225,15 +2137,15 @@
 
         // Start auto-play
         function startBannerAutoPlay() {
-            // Clear any existing interval first to avoid duplicates
-            if (bannerInterval) {
-                clearInterval(bannerInterval);
-                bannerInterval = null;
-                console.log('Cleared existing bannerInterval before starting a new one');
-            }
-            bannerInterval = setInterval(() => {
-                scrollBanner('right');
-            }, 8000); // Change slide every 8 seconds
+                    // Clear any existing interval first to avoid duplicates
+                    if (bannerInterval) {
+                        clearInterval(bannerInterval);
+                        bannerInterval = null;
+                        console.log('Cleared existing bannerInterval before starting a new one');
+                    }
+                    bannerInterval = setInterval(() => {
+                        scrollBanner('right');
+                    }, 8000); // Change slide every 8 seconds
         }
 
         // Stop auto-play
@@ -2244,29 +2156,17 @@
             }
         }
 
-        // Event delegation for employer cards
-        document.addEventListener('click', function(e) {
-            const employerCard = e.target.closest('.employer-card');
-            if (employerCard) {
-                const companyId = employerCard.dataset.companyId;
-                if (companyId) {
-                    viewCompanyDetail(companyId);
-                }
-            }
+
+        // Initialize categories when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            loadBannerCarousel();
+            loadJobCategories();
         });
-
-        // ===== AI ANALYSIS FUNCTIONS - Now loaded from external file =====
-        // See: public/js/ai-analysis.js
-
-        // Note: loadJobCategories() is called in initHomePage() via Promise.all
-        // No need to call it again in DOMContentLoaded
     </script>
-
+    
     <!-- Include API Helper -->
     <script src="{{ asset('js/api.js') }}"></script>
     <script src="{{ asset('js/auth.js') }}"></script>
-    <script src="{{ asset('js/ai-feedback-widget.js') }}?v={{ time() }}"></script>
-    <script src="{{ asset('js/ai-analysis.js') }}?v={{ time() }}"></script>
 </body>
-
 </html>
+

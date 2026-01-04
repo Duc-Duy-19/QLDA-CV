@@ -47,11 +47,7 @@ class APIHelper {
 
             return data;
         } catch (error) {
-            // Don't log 403/401 errors - they're expected for unauthorized users
-            // Only log other errors
-            if (error.status !== 403 && error.status !== 401) {
-                console.error('API request failed:', error);
-            }
+            console.error('API request failed:', error);
             throw error;
         }
     }

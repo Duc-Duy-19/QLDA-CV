@@ -58,55 +58,47 @@
         <div style="padding: 20px; border-bottom: 1px solid #ecf0f1; display: flex; justify-content: space-between; align-items: center;">
             <h3 style="margin: 0;">Chi tiết User</h3>
             <button onclick="closeUserModal()" style="background: none; border: none; font-size: 24px; cursor: pointer;">&times;</button>
+            </div>
+            <div id="userDetails" style="padding: 20px;"></div>
         </div>
-        <div id="userDetails" style="padding: 20px;"></div>
     </div>
-</div>
 
-<script>
-    const apiBase = '/api/admin/users';
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+    <script>
+        const apiBase = '/api/admin/users';
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 
-    let currentPage = 1;
-    let lastPage = 1;
-    let perPage = 20;
+        let currentPage = 1;
+        let lastPage = 1;
+        let perPage = 20;
 
-    function getRoleText(role) {
-        switch (role) {
-            case 'admin':
-                return 'Admin';
-            case 'employer':
-                return 'Nhà tuyển dụng';
-            case 'candidate':
-                return 'Ứng viên';
-            default:
-                return role;
+        function getRoleText(role) {
+            switch(role) {
+                case 'admin': return 'Admin';
+                case 'employer': return 'Nhà tuyển dụng';
+                case 'candidate': return 'Ứng viên';
+                default: return role;
+            }
         }
-    }
 
-    function getStatusText(status) {
-        switch (status) {
-            case 'active':
-                return 'Hoạt động';
-            case 'inactive':
-                return 'Tạm dừng';
-            case 'suspended':
-                return 'Bị khóa';
-            default:
-                return status;
+        function getStatusText(status) {
+            switch(status) {
+                case 'active': return 'Hoạt động';
+                case 'inactive': return 'Tạm dừng';
+                case 'suspended': return 'Bị khóa';
+                default: return status;
+            }
         }
-    }
 
-    function closeUserModal() {
-        document.getElementById('userModal').style.display = 'none';
-    }
+        function closeUserModal() {
+            document.getElementById('userModal').style.display = 'none';
+        }
 
-    function renderUsers(users) {
-        const tbody = document.getElementById('usersTbody');
-        tbody.innerHTML = '';
+        function renderUsers(users) {
+            const tbody = document.getElementById('usersTbody');
+            tbody.innerHTML = '';
 
-        if (!users || users.length === 0) {
-            tbody.innerHTML = `
+            if (!users || users.length === 0) {
+                tbody.innerHTML = `
                     <tr>
                         <td colspan="6" style="text-align: center; padding: 60px; color: #7f8c8d;">
                             <i class="fas fa-users" style="font-size: 64px; margin-bottom: 20px; display: block; color: #bdc3c7;"></i>
@@ -115,12 +107,12 @@
                         </td>
                     </tr>
                 `;
-            return;
-        }
+                return;
+            }
 
-        users.forEach(user => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
+            users.forEach(user => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
                     <td>
                         <div style="display: flex; align-items: center; gap: 15px;">
                             <div style="width: 50px; height: 50px; background: #ecf0f1; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
@@ -141,164 +133,214 @@
                     </td>
                     <td>
                         <div style="display: flex; gap: 5px; flex-wrap: wrap;">
-                            <button class="btn btn-info btn-view-user" data-user-id="${user.id}" style="padding: 6px 12px; font-size: 12px;"><i class="fas fa-eye"></i></button>
+                            <button class="btn btn-info" onclick="viewUser(${user.id})" style="padding: 6px 12px; font-size: 12px;"><i class="fas fa-eye"></i></button>
                             ${""}
                         </div>
                     </td>
                 `;
 
-            const actionCell = row.querySelector('td:last-child div');
-            if (user.role !== 'admin') {
-                if (user.status === 'active') {
-                    const suspendBtn = document.createElement('button');
-                    suspendBtn.className = 'btn btn-warning btn-suspend-user';
-                    suspendBtn.style.cssText = 'padding: 6px 12px; font-size: 12px;';
-                    suspendBtn.innerHTML = '<i class="fas fa-pause"></i>';
-                    suspendBtn.dataset.userId = user.id;
-                    actionCell.appendChild(suspendBtn);
-                } else {
-                    const activateBtn = document.createElement('button');
-                    activateBtn.className = 'btn btn-success btn-activate-user';
-                    activateBtn.style.cssText = 'padding: 6px 12px; font-size: 12px;';
-                    activateBtn.innerHTML = '<i class="fas fa-play"></i>';
-                    activateBtn.dataset.userId = user.id;
-                    actionCell.appendChild(activateBtn);
+                const actionCell = row.querySelector('td:last-child div');
+                if (user.role !== 'admin') {
+                    if (user.status === 'active') {
+                        const suspendBtn = document.createElement('button');
+                        suspendBtn.className = 'btn btn-warning';
+                        suspendBtn.style.cssText = 'padding: 6px 12px; font-size: 12px;';
+                        suspendBtn.innerHTML = '<i class="fas fa-pause"></i>';
+                        suspendBtn.onclick = () => suspendUser(user.id);
+                        actionCell.appendChild(suspendBtn);
+                    } else {
+                        const activateBtn = document.createElement('button');
+                        activateBtn.className = 'btn btn-success';
+                        activateBtn.style.cssText = 'padding: 6px 12px; font-size: 12px;';
+                        activateBtn.innerHTML = '<i class="fas fa-play"></i>';
+                        activateBtn.onclick = () => activateUser(user.id);
+                        actionCell.appendChild(activateBtn);
+                    }
+
+                    const delBtn = document.createElement('button');
+                    delBtn.className = 'btn btn-danger';
+                    delBtn.style.cssText = 'padding: 6px 12px; font-size: 12px;';
+                    delBtn.innerHTML = '<i class="fas fa-trash"></i>';
+                    delBtn.onclick = () => deleteUser(user.id);
+                    actionCell.appendChild(delBtn);
                 }
-            }
 
-            tbody.appendChild(row);
-        });
-    }
-
-    function escapeHtml(unsafe) {
-        if (unsafe === null || unsafe === undefined) return '';
-        return String(unsafe)
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#039;');
-    }
-
-    function roleColor(role) {
-        switch (role) {
-            case 'admin':
-                return '#e74c3c';
-            case 'employer':
-                return '#27ae60';
-            default:
-                return '#3498db';
-        }
-    }
-
-    function formatDate(dt) {
-        if (!dt) return '';
-        try {
-            return new Date(dt).toLocaleDateString('vi-VN');
-        } catch (e) {
-            return dt;
-        }
-    }
-
-    function formatTime(dt) {
-        if (!dt) return '';
-        try {
-            return new Date(dt).toLocaleTimeString('vi-VN', {
-                hour: '2-digit',
-                minute: '2-digit'
+                tbody.appendChild(row);
             });
-        } catch (e) {
-            return '';
         }
-    }
 
-    function renderPagination(meta) {
-        const container = document.getElementById('usersPagination');
-        container.innerHTML = '';
-        if (!meta) return;
+        function escapeHtml(unsafe) {
+            if (unsafe === null || unsafe === undefined) return '';
+            return String(unsafe)
+              .replace(/&/g, '&amp;')
+              .replace(/</g, '&lt;')
+              .replace(/>/g, '&gt;')
+              .replace(/"/g, '&quot;')
+              .replace(/'/g, '&#039;');
+        }
 
-        currentPage = meta.current_page || 1;
-        lastPage = meta.last_page || 1;
+        function roleColor(role) {
+            switch(role) {
+                case 'admin': return '#e74c3c';
+                case 'employer': return '#27ae60';
+                default: return '#3498db';
+            }
+        }
 
-        const prev = document.createElement('button');
-        prev.textContent = '« Prev';
-        prev.className = 'btn btn-light';
-        prev.disabled = currentPage <= 1;
-        prev.onclick = () => loadUsers(currentPage - 1);
-        container.appendChild(prev);
+        function formatDate(dt) {
+            if (!dt) return '';
+            try { return new Date(dt).toLocaleDateString('vi-VN'); } catch(e) { return dt; }
+        }
 
-        const info = document.createElement('span');
-        info.textContent = `Trang ${currentPage} / ${lastPage}`;
-        info.style.margin = '0 10px';
-        container.appendChild(info);
+        function formatTime(dt) {
+            if (!dt) return '';
+            try { return new Date(dt).toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'}); } catch(e) { return ''; }
+        }
 
-        const next = document.createElement('button');
-        next.textContent = 'Next »';
-        next.className = 'btn btn-light';
-        next.disabled = currentPage >= lastPage;
-        next.onclick = () => loadUsers(currentPage + 1);
-        container.appendChild(next);
-    }
+        function renderPagination(meta) {
+            const container = document.getElementById('usersPagination');
+            container.innerHTML = '';
+            if (!meta) return;
 
-    async function loadUsers(page = 1) {
-        const rawSearch = document.getElementById('searchInput').value || '';
-        const rawRole = document.getElementById('roleFilter').value || '';
-        const rawStatus = document.getElementById('statusFilter').value || '';
-        perPage = 20;
-        const params = new URLSearchParams();
-        params.set('page', page);
-        params.set('per_page', perPage);
-        if (rawSearch.trim() !== '') params.set('search', rawSearch.trim());
-        if (rawRole.trim() !== '') params.set('role', rawRole.trim());
-        if (rawStatus.trim() !== '') params.set('status', rawStatus.trim());
+            currentPage = meta.current_page || 1;
+            lastPage = meta.last_page || 1;
 
-        const query = params.toString() ? `?${params.toString()}` : '';
-        try {
-            const apiUrl = `${window.location.origin}/api/admin/users${query}`;
-            console.log('Fetching users from:', apiUrl);
+            const prev = document.createElement('button');
+            prev.textContent = '« Prev';
+            prev.className = 'btn btn-light';
+            prev.disabled = currentPage <= 1;
+            prev.onclick = () => loadUsers(currentPage - 1);
+            container.appendChild(prev);
 
-            if (window.APIHelper && typeof window.APIHelper.request === 'function') {
-                let payload;
-                try {
-                    payload = await window.APIHelper.request(`/admin/users${query}`);
-                } catch (err) {
-                    console.warn('APIHelper initial request failed, attempting to refresh CSRF and retry...', err && err.response ? err.response : (err && err.message ? err.message : String(err)));
+            const info = document.createElement('span');
+            info.textContent = `Trang ${currentPage} / ${lastPage}`;
+            info.style.margin = '0 10px';
+            container.appendChild(info);
+
+            const next = document.createElement('button');
+            next.textContent = 'Next »';
+            next.className = 'btn btn-light';
+            next.disabled = currentPage >= lastPage;
+            next.onclick = () => loadUsers(currentPage + 1);
+            container.appendChild(next);
+        }
+
+        async function loadUsers(page = 1) {
+            const rawSearch = document.getElementById('searchInput').value || '';
+            const rawRole = document.getElementById('roleFilter').value || '';
+            const rawStatus = document.getElementById('statusFilter').value || '';
+            perPage = 20;
+            const params = new URLSearchParams();
+            params.set('page', page);
+            params.set('per_page', perPage);
+            if (rawSearch.trim() !== '') params.set('search', rawSearch.trim());
+            if (rawRole.trim() !== '') params.set('role', rawRole.trim());
+            if (rawStatus.trim() !== '') params.set('status', rawStatus.trim());
+
+            const query = params.toString() ? `?${params.toString()}` : '';
+            try {
+                const apiUrl = `${window.location.origin}/api/admin/users${query}`;
+                console.log('Fetching users from:', apiUrl);
+
+                if (window.APIHelper && typeof window.APIHelper.request === 'function') {
+                    let payload;
                     try {
-                        if (typeof window.APIHelper.ensureCsrf === 'function') {
-                            await window.APIHelper.ensureCsrf();
-                            payload = await window.APIHelper.request(`/admin/users${query}`);
-                        } else {
-                            // fallback to direct call
-                            await fetch(`${window.location.origin}/sanctum/csrf-cookie`, {
-                                credentials: 'include'
-                            });
-                            payload = await window.APIHelper.request(`/admin/users${query}`);
+                        payload = await window.APIHelper.request(`/admin/users${query}`);
+                    } catch (err) {
+                        console.warn('APIHelper initial request failed, attempting to refresh CSRF and retry...', err && err.response ? err.response : (err && err.message ? err.message : String(err)));
+                        try {
+                            if (typeof window.APIHelper.ensureCsrf === 'function') {
+                                await window.APIHelper.ensureCsrf();
+                                payload = await window.APIHelper.request(`/admin/users${query}`);
+                            } else {
+                                // fallback to direct call
+                                await fetch(`${window.location.origin}/sanctum/csrf-cookie`, { credentials: 'include' });
+                                payload = await window.APIHelper.request(`/admin/users${query}`);
+                            }
+                        } catch (err2) {
+                            console.warn('APIHelper retry failed:', err2 && err2.response ? err2.response : (err2 && err2.message ? err2.message : String(err2)));
+                            throw err2;
                         }
-                    } catch (err2) {
-                        console.warn('APIHelper retry failed:', err2 && err2.response ? err2.response : (err2 && err2.message ? err2.message : String(err2)));
-                        throw err2;
+                    }
+                    console.debug('Raw API payload (APIHelper):', payload);
+                    let users = [];
+                    let meta = null;
+                    let total = 0;
+
+                    if (Array.isArray(payload)) {
+                        users = payload;
+                        total = payload.length;
+                    } else if (payload && Array.isArray(payload.data)) {
+                        users = payload.data;
+                        meta = { current_page: payload.current_page, last_page: payload.last_page };
+                        total = payload.total ?? users.length;
+                    } else if (payload && Array.isArray(payload.users)) {
+                        users = payload.users;
+                        total = payload.total ?? users.length;
+                    } else if (payload && typeof payload === 'object') {
+                        const values = Object.values(payload).filter(v => Array.isArray(v));
+                        if (values.length > 0) {
+                            users = values[0];
+                            total = users.length;
+                        }
+                    }
+
+                    document.getElementById('usersCount').textContent = total || users.length || 0;
+                    renderUsers(users);
+                    renderPagination(meta);
+                    return;
+                }
+
+                const url = `${apiBase}${query}`;
+                console.log('Fallback fetch URL:', url);
+                let res = await fetch(url, { credentials: 'same-origin', headers: { 'Accept': 'application/json' } });
+                let text = await res.text();
+                let data;
+                try { data = JSON.parse(text); } catch(e) { data = { message: text }; }
+                console.debug('Raw fetch response:', res.status, data);
+                if (!res.ok) {
+                    if ((res.status === 401 || res.status === 419) && !url.includes('csrf-retry')) {
+                        console.warn('Fetch returned status ' + res.status + ', attempting to refresh CSRF and retry');
+                        try {
+                            await fetch(window.location.origin + '/sanctum/csrf-cookie', { credentials: 'include' });
+                            const retryUrl = url + (url.includes('?') ? '&' : '?') + 'csrf-retry=1';
+                            res = await fetch(retryUrl, { credentials: 'same-origin', headers: { 'Accept': 'application/json' } });
+                            text = await res.text();
+                            try { data = JSON.parse(text); } catch(e) { data = { message: text }; }
+                            console.debug('Raw fetch response (retry):', res.status, data);
+                        } catch (retryErr) {
+                            console.error('Fetch retry failed', retryErr);
+                            const err = new Error('Network response was not ok');
+                            err.status = res.status;
+                            err.response = data;
+                            throw err;
+                        }
                     }
                 }
-                console.debug('Raw API payload (APIHelper):', payload);
+
+                if (!res.ok) {
+                    console.error('Users fetch failed', { status: res.status, body: data });
+                    const err = new Error('Network response was not ok');
+                    err.status = res.status;
+                    err.response = data;
+                    throw err;
+                }
                 let users = [];
                 let meta = null;
                 let total = 0;
 
-                if (Array.isArray(payload)) {
-                    users = payload;
-                    total = payload.length;
-                } else if (payload && Array.isArray(payload.data)) {
-                    users = payload.data;
-                    meta = {
-                        current_page: payload.current_page,
-                        last_page: payload.last_page
-                    };
-                    total = payload.total ?? users.length;
-                } else if (payload && Array.isArray(payload.users)) {
-                    users = payload.users;
-                    total = payload.total ?? users.length;
-                } else if (payload && typeof payload === 'object') {
-                    const values = Object.values(payload).filter(v => Array.isArray(v));
+                if (Array.isArray(data)) {
+                    users = data;
+                    total = data.length;
+                } else if (data && Array.isArray(data.data)) {
+                    users = data.data;
+                    meta = { current_page: data.current_page, last_page: data.last_page };
+                    total = data.total ?? users.length;
+                } else if (data && Array.isArray(data.users)) {
+                    users = data.users;
+                    total = data.total ?? users.length;
+                } else if (data && typeof data === 'object') {
+                    const values = Object.values(data).filter(v => Array.isArray(v));
                     if (values.length > 0) {
                         users = values[0];
                         total = users.length;
@@ -308,157 +350,57 @@
                 document.getElementById('usersCount').textContent = total || users.length || 0;
                 renderUsers(users);
                 renderPagination(meta);
-                return;
-            }
-
-            const url = `${apiBase}${query}`;
-            console.log('Fallback fetch URL:', url);
-            let res = await fetch(url, {
-                credentials: 'same-origin',
-                headers: {
-                    'Accept': 'application/json'
+                } catch (err) {
+                console.error('Failed to load users', err, err && err.response ? err.response : null);
+                if (err && err.response) console.debug('API error response body:', err.response);
+                if (err && err.status === 401) {
+                    alert('Bạn chưa đăng nhập hoặc hết phiên làm việc. Vui lòng đăng nhập lại.');
+                    window.location.href = '{{ route("login") }}';
+                    return;
                 }
-            });
-            let text = await res.text();
-            let data;
-            try {
-                data = JSON.parse(text);
-            } catch (e) {
-                data = {
-                    message: text
-                };
+                alert('Không thể tải danh sách user. Kiểm tra console để biết thêm chi tiết.');
             }
-            console.debug('Raw fetch response:', res.status, data);
-            if (!res.ok) {
-                if ((res.status === 401 || res.status === 419) && !url.includes('csrf-retry')) {
-                    console.warn('Fetch returned status ' + res.status + ', attempting to refresh CSRF and retry');
-                    try {
-                        await fetch(window.location.origin + '/sanctum/csrf-cookie', {
-                            credentials: 'include'
-                        });
-                        const retryUrl = url + (url.includes('?') ? '&' : '?') + 'csrf-retry=1';
-                        res = await fetch(retryUrl, {
-                            credentials: 'same-origin',
-                            headers: {
-                                'Accept': 'application/json'
-                            }
-                        });
-                        text = await res.text();
-                        try {
-                            data = JSON.parse(text);
-                        } catch (e) {
-                            data = {
-                                message: text
-                            };
-                        }
-                        console.debug('Raw fetch response (retry):', res.status, data);
-                    } catch (retryErr) {
-                        console.error('Fetch retry failed', retryErr);
-                        const err = new Error('Network response was not ok');
-                        err.status = res.status;
-                        err.response = data;
-                        throw err;
-                    }
-                }
-            }
-
-            if (!res.ok) {
-                console.error('Users fetch failed', {
-                    status: res.status,
-                    body: data
-                });
-                const err = new Error('Network response was not ok');
-                err.status = res.status;
-                err.response = data;
-                throw err;
-            }
-            let users = [];
-            let meta = null;
-            let total = 0;
-
-            if (Array.isArray(data)) {
-                users = data;
-                total = data.length;
-            } else if (data && Array.isArray(data.data)) {
-                users = data.data;
-                meta = {
-                    current_page: data.current_page,
-                    last_page: data.last_page
-                };
-                total = data.total ?? users.length;
-            } else if (data && Array.isArray(data.users)) {
-                users = data.users;
-                total = data.total ?? users.length;
-            } else if (data && typeof data === 'object') {
-                const values = Object.values(data).filter(v => Array.isArray(v));
-                if (values.length > 0) {
-                    users = values[0];
-                    total = users.length;
-                }
-            }
-
-            document.getElementById('usersCount').textContent = total || users.length || 0;
-            renderUsers(users);
-            renderPagination(meta);
-        } catch (err) {
-            console.error('Failed to load users', err, err && err.response ? err.response : null);
-            if (err && err.response) console.debug('API error response body:', err.response);
-            if (err && err.status === 401) {
-                alert('Bạn chưa đăng nhập hoặc hết phiên làm việc. Vui lòng đăng nhập lại.');
-                window.location.href = '{{ route("login") }}';
-                return;
-            }
-            alert('Không thể tải danh sách user. Kiểm tra console để biết thêm chi tiết.');
         }
-    }
 
-    async function viewUser(userId) {
-        try {
-            if (window.APIHelper && typeof window.APIHelper.request === 'function') {
+        async function viewUser(userId) {
+            try {
+                if (window.APIHelper && typeof window.APIHelper.request === 'function') {
+                    const params = new URLSearchParams();
+                    params.set('per_page', 100);
+                    params.set('page', 1);
+                    const payload = await window.APIHelper.request('/admin/users?' + params.toString());
+                    const usersList = Array.isArray(payload)
+                        ? payload
+                        : (Array.isArray(payload.data) ? payload.data : (Array.isArray(payload.users) ? payload.users : []));
+                    const found = usersList.find(u => Number(u.id) === Number(userId));
+                    if (found) { showUserModal(found); return; }
+                    alert('Không tìm thấy thông tin user (vui lòng thử tìm kiếm hoặc làm mới trang).');
+                    return;
+                }
+
                 const params = new URLSearchParams();
                 params.set('per_page', 100);
                 params.set('page', 1);
-                const payload = await window.APIHelper.request('/admin/users?' + params.toString());
-                const usersList = Array.isArray(payload) ?
-                    payload :
-                    (Array.isArray(payload.data) ? payload.data : (Array.isArray(payload.users) ? payload.users : []));
+                const res = await fetch(`${apiBase}?${params.toString()}`, { credentials: 'same-origin', headers: { 'Accept': 'application/json' } });
+                if (!res.ok) throw new Error('Network response was not ok');
+                const payload = await res.json();
+                const usersList = Array.isArray(payload)
+                    ? payload
+                    : (Array.isArray(payload.data) ? payload.data : (Array.isArray(payload.users) ? payload.users : []));
                 const found = usersList.find(u => Number(u.id) === Number(userId));
                 if (found) {
                     showUserModal(found);
                     return;
                 }
                 alert('Không tìm thấy thông tin user (vui lòng thử tìm kiếm hoặc làm mới trang).');
-                return;
+            } catch (err) {
+                console.error('Error loading user detail', err);
+                alert('Có lỗi xảy ra khi tải thông tin user');
             }
-
-            const params = new URLSearchParams();
-            params.set('per_page', 100);
-            params.set('page', 1);
-            const res = await fetch(`${apiBase}?${params.toString()}`, {
-                credentials: 'same-origin',
-                headers: {
-                    'Accept': 'application/json'
-                }
-            });
-            if (!res.ok) throw new Error('Network response was not ok');
-            const payload = await res.json();
-            const usersList = Array.isArray(payload) ?
-                payload :
-                (Array.isArray(payload.data) ? payload.data : (Array.isArray(payload.users) ? payload.users : []));
-            const found = usersList.find(u => Number(u.id) === Number(userId));
-            if (found) {
-                showUserModal(found);
-                return;
-            }
-            alert('Không tìm thấy thông tin user (vui lòng thử tìm kiếm hoặc làm mới trang).');
-        } catch (err) {
-            console.error('Error loading user detail', err);
-            alert('Có lỗi xảy ra khi tải thông tin user');
         }
-    }
 
-    function showUserModal(data) {
-        document.getElementById('userDetails').innerHTML = `
+        function showUserModal(data) {
+            document.getElementById('userDetails').innerHTML = `
                 <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 20px;">
                     <div style="width: 80px; height: 80px; background: #ecf0f1; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
                         <i class="fas fa-user" style="color: #7f8c8d; font-size: 32px;"></i>
@@ -488,124 +430,85 @@
                     </div>
                 </div>
             `;
-        document.getElementById('userModal').style.display = 'block';
-    }
+            document.getElementById('userModal').style.display = 'block';
+        }
 
-    async function suspendUser(userId) {
-        if (!confirm('Tạm dừng user này?')) return;
-        try {
-            if (window.APIHelper && typeof window.APIHelper.request === 'function') {
-                const payload = await window.APIHelper.request(`/admin/users/${userId}/suspend`, {
-                    method: 'POST'
-                });
+        async function suspendUser(userId) {
+            if (!confirm('Tạm dừng user này?')) return;
+            try {
+                if (window.APIHelper && typeof window.APIHelper.request === 'function') {
+                    const payload = await window.APIHelper.request(`/admin/users/${userId}/suspend`, { method: 'POST' });
+                    alert(payload.message || 'Đã tạm dừng user');
+                    loadUsers(currentPage);
+                    return;
+                }
+
+                const res = await fetch(`${apiBase}/${userId}/suspend`, { method: 'POST', credentials: 'same-origin', headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken } });
+                let payload = {};
+                try {
+                    payload = await res.json();
+                } catch (e) {
+                    payload = { message: 'Không có phản hồi JSON từ server' };
+                }
+
+                if (!res.ok) {
+                    // Show server-provided message if available, else generic
+                    const msg = payload.message || payload.error || `Lỗi server (${res.status})`;
+                    alert(msg);
+                    loadUsers(currentPage);
+                    return;
+                }
+
                 alert(payload.message || 'Đã tạm dừng user');
                 loadUsers(currentPage);
-                return;
+            } catch (err) {
+                console.error('Suspend failed', err);
+                alert(err && err.message ? err.message : 'Không thể tạm dừng user');
             }
-
-            const res = await fetch(`${apiBase}/${userId}/suspend`, {
-                method: 'POST',
-                credentials: 'same-origin',
-                headers: {
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken
-                }
-            });
-            let payload = {};
-            try {
-                payload = await res.json();
-            } catch (e) {
-                payload = {
-                    message: 'Không có phản hồi JSON từ server'
-                };
-            }
-
-            if (!res.ok) {
-                // Show server-provided message if available, else generic
-                const msg = payload.message || payload.error || `Lỗi server (${res.status})`;
-                alert(msg);
-                loadUsers(currentPage);
-                return;
-            }
-
-            alert(payload.message || 'Đã tạm dừng user');
-            loadUsers(currentPage);
-        } catch (err) {
-            console.error('Suspend failed', err);
-            alert(err && err.message ? err.message : 'Không thể tạm dừng user');
         }
-    }
 
-    async function activateUser(userId) {
-        if (!confirm('Kích hoạt user này?')) return;
-        try {
-            if (window.APIHelper && typeof window.APIHelper.request === 'function') {
-                const payload = await window.APIHelper.request(`/admin/users/${userId}/reactivate`, {
-                    method: 'POST'
-                });
+        async function activateUser(userId) {
+            if (!confirm('Kích hoạt user này?')) return;
+            try {
+                if (window.APIHelper && typeof window.APIHelper.request === 'function') {
+                    const payload = await window.APIHelper.request(`/admin/users/${userId}/reactivate`, { method: 'POST' });
+                    alert(payload.message || 'Đã kích hoạt user');
+                    loadUsers(currentPage);
+                    return;
+                }
+
+                const res = await fetch(`${apiBase}/${userId}/reactivate`, { method: 'POST', credentials: 'same-origin', headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken } });
+                if (!res.ok) throw new Error('Network response was not ok');
+                const payload = await res.json();
                 alert(payload.message || 'Đã kích hoạt user');
                 loadUsers(currentPage);
-                return;
+            } catch (err) {
+                console.error('Reactivate failed', err);
+                alert('Không thể kích hoạt user');
             }
+        }
 
-            const res = await fetch(`${apiBase}/${userId}/reactivate`, {
-                method: 'POST',
-                credentials: 'same-origin',
-                headers: {
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken
-                }
+        function deleteUser(userId) {
+            if (!confirm('Xóa user này? Hành động này không thể hoàn tác!')) return;
+            alert('Xóa user chưa được triển khai trên backend. Nếu bạn muốn, tôi có thể thêm endpoint xóa hoặc tắt nút này.');
+        }
+
+        function setupControls() {
+            document.getElementById('searchInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') loadUsers(1);
             });
-            if (!res.ok) throw new Error('Network response was not ok');
-            const payload = await res.json();
-            alert(payload.message || 'Đã kích hoạt user');
-            loadUsers(currentPage);
-        } catch (err) {
-            console.error('Reactivate failed', err);
-            alert('Không thể kích hoạt user');
+            document.getElementById('roleFilter').addEventListener('change', () => loadUsers(1));
+            document.getElementById('statusFilter').addEventListener('change', () => loadUsers(1));
         }
-    }
 
-    function setupControls() {
-        document.getElementById('searchInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') loadUsers(1);
+        // Close modal when clicking outside
+        document.getElementById('userModal').addEventListener('click', function(e) {
+            if (e.target === this) closeUserModal();
         });
-        document.getElementById('roleFilter').addEventListener('change', () => loadUsers(1));
-        document.getElementById('statusFilter').addEventListener('change', () => loadUsers(1));
-    }
 
-    // Close modal when clicking outside
-    document.getElementById('userModal').addEventListener('click', function(e) {
-        if (e.target === this) closeUserModal();
-    });
-
-    // Event delegation for user action buttons
-    document.addEventListener('click', function(e) {
-        // View user button
-        if (e.target.closest('.btn-view-user')) {
-            const btn = e.target.closest('.btn-view-user');
-            const userId = btn.dataset.userId;
-            if (userId) viewUser(userId);
-        }
-
-        // Suspend user button
-        if (e.target.closest('.btn-suspend-user')) {
-            const btn = e.target.closest('.btn-suspend-user');
-            const userId = btn.dataset.userId;
-            if (userId) suspendUser(userId);
-        }
-
-        // Activate user button
-        if (e.target.closest('.btn-activate-user')) {
-            const btn = e.target.closest('.btn-activate-user');
-            const userId = btn.dataset.userId;
-            if (userId) activateUser(userId);
-        }
-    });
-
-    document.addEventListener('DOMContentLoaded', function() {
-        setupControls();
-        loadUsers(1);
-    });
-</script>
+        document.addEventListener('DOMContentLoaded', function() {
+            setupControls();
+            loadUsers(1);
+        });
+        </script>
 @endsection

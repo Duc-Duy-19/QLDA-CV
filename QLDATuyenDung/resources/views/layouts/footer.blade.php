@@ -169,9 +169,4 @@
             }
         })();
     </script>
-
-    <!-- AI Career Advisor Widget -->
-    @auth
-    <script src="{{ asset('js/ai-career-advisor.js') }}"></script>
-    @endauth
 </footer>
