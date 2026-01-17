@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Animated computer + CV icon
+     - Place in public/images/computer-cv-icon.svg
+     - Scales with width/height attributes where used
+     - Uses CSS variables for easy color theming
+     - Lightweight, pure SVG (no external assets)
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" width="800" height="400" aria-labelledby="title desc" role="img">
+  <title id="title">Computer with animated CV panel</title>
+  <desc id="desc">An illustration of a desktop monitor on the left and a CV/resume panel sliding and pulsing on the right to suggest CV creation.</desc>
+  <defs>
+    <linearGradient id="screenGrad" x1="0" x2="1">
+      <stop offset="0" stop-color="#eaf4ff"/>
+      <stop offset="1" stop-color="#ffffff"/>
+    </linearGradient>
+    <linearGradient id="panelGrad" x1="0" x2="1">
+      <stop offset="0" stop-color="#fff7e9"/>
+      <stop offset="1" stop-color="#fffbe8"/>
+    </linearGradient>
+    <filter id="softShadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000" flood-opacity="0.12"/>
+    </filter>
+    <style>
+      .monitor-fill { fill: #2a9df4; }
+      .monitor-stand { fill: #1f6fb3; }
+      .screen { fill: url(#screenGrad); stroke: #d4e9ff; stroke-width: 2; }
+      .panel { fill: url(#panelGrad); stroke: #f2d9a8; stroke-width: 1.5; }
+      .cv-line { fill: #dfe7ee; }
+      .cv-title { fill: #0b4a6f; font: bold 22px/1.1 'Segoe UI', Roboto, sans-serif; }
+      .pulse { transform-origin: center; }
+
+      /* Slide-in animation for the CV panel */
+      @keyframes slide-in {
+        0% { transform: translateX(80px) scale(0.96); opacity: 0; }
+        60% { transform: translateX(-6px) scale(1.02); opacity: 1; }
+        100% { transform: translateX(0) scale(1); opacity: 1; }
+      }
+
+      /* subtle up-down float for the whole icon */
+      @keyframes float {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-6px); }
+        100% { transform: translateY(0px); }
+      }
+
+      /* pulsing highlight for the CV "save" circle */
+      @keyframes pulse-scale {
+        0% { transform: scale(1); opacity: 0.95; }
+        50% { transform: scale(1.12); opacity: 0.7; }
+        100% { transform: scale(1); opacity: 0.95; }
+      }
+
+      .animate-slide { animation: slide-in 900ms cubic-bezier(.2,.9,.3,1) 200ms both; }
+      .animate-float { animation: float 3500ms ease-in-out infinite; }
+      .animate-pulse { animation: pulse-scale 1200ms ease-in-out infinite; }
+
+      /* Make strokes crisp on small sizes */
+      .no-select { user-select: none; -webkit-user-select: none; }
+    </style>
+  </defs>
+
+  <!-- Group that floats gently -->
+  <g class="animate-float no-select" transform="translate(30,20)">
+
+    <!-- Monitor body -->
+    <g transform="translate(40,30)">
+      <rect x="0" y="0" width="360" height="210" rx="18" class="monitor-fill" filter="url(#softShadow)"/>
+      <!-- Screen rectangle -->
+      <rect x="22" y="18" width="316" height="154" rx="8" class="screen"/>
+      <!-- Small UI elements inside screen -->
+      <rect x="36" y="34" width="120" height="18" rx="6" fill="#bfe4ff"/>
+      <rect x="36" y="66" width="260" height="8" rx="4" fill="#d9eefc"/>
+      <rect x="36" y="80" width="200" height="8" rx="4" fill="#d9eefc"/>
+      <rect x="36" y="94" width="180" height="8" rx="4" fill="#d9eefc"/>
+      <rect x="36" y="108" width="150" height="8" rx="4" fill="#d9eefc"/>
+
+      <!-- Monitor stand -->
+      <rect x="154" y="222" width="54" height="10" rx="5" class="monitor-stand"/>
+      <rect x="164" y="232" width="34" height="10" rx="5" class="monitor-stand"/>
+    </g>
+
+    <!-- Animated CV panel on the right -->
+    <g transform="translate(420,40)">
+      <!-- shadow behind panel -->
+      <ellipse cx="92" cy="148" rx="88" ry="18" fill="#000" opacity="0.06"/>
+
+      <!-- panel group slides in -->
+      <g class="animate-slide" id="panelGroup" transform="translate(0,0)">
+        <rect x="0" y="0" width="186" height="238" rx="12" class="panel" filter="url(#softShadow)"/>
+        <!-- CV header/title -->
+        <rect x="18" y="20" width="150" height="14" rx="6" fill="#ffecd5"/>
+        <text x="26" y="46" class="cv-title">Tạo CV</text>
+
+        <!-- lines representing text -->
+        <rect x="18" y="64" width="150" height="10" rx="6" class="cv-line"/>
+        <rect x="18" y="82" width="120" height="10" rx="6" class="cv-line"/>
+        <rect x="18" y="100" width="140" height="10" rx="6" class="cv-line"/>
+
+        <!-- profile block -->
+        <circle cx="40" cy="150" r="26" fill="#dbeefc"/>
+        <rect x="72" y="134" width="82" height="12" rx="6" fill="#dfe7ee"/>
+        <rect x="72" y="152" width="120" height="8" rx="4" fill="#dfe7ee"/>
+
+        <!-- Save / create button (pulsing) -->
+        <g transform="translate(48,188)" class="animate-pulse pulse">
+          <circle cx="40" cy="18" r="18" fill="#0b84d8"/>
+          <path d="M34 18h12M40 12v12" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+
+        <!-- small animated lines: slide-from-left subtle -->
+        <g opacity="0.9">
+          <rect x="-60" y="30" width="40" height="4" rx="2" fill="#e9f6ff" transform="translate(0,0)">
+            <animate attributeName="x" from="-60" to="10" dur="1.2s" begin="0.2s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="0;1;0" dur="1.2s" begin="0.2s" repeatCount="indefinite"/>
+          </rect>
+          <rect x="-70" y="58" width="54" height="4" rx="2" fill="#f7f0e3" transform="translate(0,0)">
+            <animate attributeName="x" from="-70" to="14" dur="1.6s" begin="0.5s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="0;1;0" dur="1.6s" begin="0.5s" repeatCount="indefinite"/>
+          </rect>
+        </g>
+
+      </g>
+
+      <!-- small floating badge on the right edge to suggest "new" -->
+      <g transform="translate(210,24)" class="animate-pulse">
+        <circle cx="8" cy="8" r="20" fill="#12b76a" opacity="0.95"/>
+        <text x="-2" y="14" fill="#fff" font-size="18" font-weight="700">+</text>
+      </g>
+    </g>
+
+  </g>
+</svg>
